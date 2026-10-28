@@ -1,0 +1,26 @@
+# SHA256 (Inhalt ab Zeile 2, d.h. dieser Datei ohne diese erste Zeile): 19068f8644630da24e76292e4c006a9c6f182fc667456c597982cb42c86c47e0
+type: custom:fritzbox-manager-card
+title: Meine FRITZ!Box
+show_title: true
+# Kategorien einzeln ein-/ausschalten (mindestens eine bleibt sichtbar)
+show_overview: true
+show_system: true
+show_internet: true
+show_wifi: true
+show_modules: true
+show_settings: true
+default_tab: overview
+zoom: 1
+read_only: false
+# Optional: Entitäten der Schwester-Integrationen von Hand festlegen,
+# falls die automatische Erkennung nichts findet
+module_calls_config:
+  entity_eingehend: sensor.fritzbox_anrufe_eingehend
+  entity_ausgehend: sensor.fritzbox_anrufe_ausgehend
+  entity_verpasst: sensor.fritzbox_anrufe_verpasst
+module_network_config:
+  entity: sensor.fritzbox_netzwerk_geraete
+module_events_config:
+  entity: sensor.fritzbox_ereignisse
+# Farben (leer = Theme-Standard)
+color_tab_active: "#03a9f4"

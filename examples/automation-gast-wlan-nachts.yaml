@@ -1,0 +1,12 @@
+# SHA256 (Inhalt ab Zeile 2, d.h. dieser Datei ohne diese erste Zeile): aaecf1c25c60e245ed101a975840438f1608abcdc4c1d612c9f1000fecbf7f90
+alias: FRITZ!Box - Gast-WLAN nachts aus
+description: Schaltet das dritte WLAN-Netz (hier als Gast-WLAN angenommen) um 23:00 aus.
+triggers:
+  - trigger: time
+    at: "23:00:00"
+actions:
+  - action: fritzbox_manager.set_wlan
+    data:
+      wlan: wlan3
+      enabled: false
+mode: single

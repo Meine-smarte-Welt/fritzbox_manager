@@ -1,0 +1,200 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "FRITZ!Box verbinden",
+        "description": "Trage die Adresse und die Zugangsdaten deiner FRITZ!Box ein. Die FRITZ!Box braucht einen Benutzer mit dem Recht „FRITZ!Box Einstellungen“, damit Schalten möglich ist. Lässt du den Port leer, wird der Standard verwendet.",
+        "data": {
+          "host": "Adresse (IP oder fritz.box)",
+          "port": "Port (optional)",
+          "username": "Benutzername",
+          "password": "Kennwort",
+          "ssl": "Verschlüsselte Verbindung (HTTPS)"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Anmeldung erneuern",
+        "description": "Die FRITZ!Box unter {host} hat die Anmeldung abgelehnt. Gib die aktuellen Zugangsdaten ein.",
+        "data": {
+          "username": "Benutzername",
+          "password": "Kennwort"
+        }
+      },
+      "reconfigure": {
+        "title": "Verbindung neu konfigurieren",
+        "data": {
+          "host": "Adresse (IP oder fritz.box)",
+          "port": "Port (optional)",
+          "username": "Benutzername",
+          "password": "Kennwort",
+          "ssl": "Verschlüsselte Verbindung (HTTPS)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Die FRITZ!Box ist nicht erreichbar. Prüfe Adresse, Port und ob TR-064 aktiv ist (Heimnetz > Netzwerk > Netzwerkeinstellungen > Zugriff für Anwendungen zulassen).",
+      "invalid_auth": "Benutzername oder Kennwort wurden abgelehnt.",
+      "unknown": "Unerwarteter Fehler. Details stehen im Protokoll von Home Assistant."
+    },
+    "abort": {
+      "already_configured": "Diese FRITZ!Box ist bereits eingerichtet.",
+      "reauth_successful": "Die Anmeldung wurde erneuert.",
+      "reconfigure_successful": "Die Verbindung wurde aktualisiert.",
+      "unique_id_mismatch": "Das ist eine andere FRITZ!Box als die eingerichtete."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "FRITZ!Box Manager",
+        "description": "Installierte Version: {version}. {update_info}",
+        "data": {
+          "scan_interval": "Abfrageintervall (Sekunden)",
+          "events_enabled": "Home-Assistant-Ereignisse senden (Internet getrennt/verbunden, neue IP, Firmware-Update)",
+          "cpu_temperature": "CPU-Temperatur abfragen (experimentell, nutzt eine nicht öffentlich dokumentierte Schnittstelle der Box)"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "firmware": {
+        "name": "Firmware"
+      },
+      "uptime": {
+        "name": "Laufzeit der Box"
+      },
+      "connection_uptime": {
+        "name": "Laufzeit der Verbindung"
+      },
+      "external_ip": {
+        "name": "Externe IPv4-Adresse"
+      },
+      "external_ipv6": {
+        "name": "Externe IPv6-Adresse"
+      },
+      "ipv6_prefix": {
+        "name": "IPv6-Präfix"
+      },
+      "download_rate": {
+        "name": "Download-Rate"
+      },
+      "upload_rate": {
+        "name": "Upload-Rate"
+      },
+      "max_download_rate": {
+        "name": "Maximale Download-Rate (Leitung)"
+      },
+      "max_upload_rate": {
+        "name": "Maximale Upload-Rate (Leitung)"
+      },
+      "bytes_received": {
+        "name": "Empfangene Daten"
+      },
+      "bytes_sent": {
+        "name": "Gesendete Daten"
+      },
+      "last_connection_error": {
+        "name": "Letzter Verbindungsfehler"
+      },
+      "wlan_clients": {
+        "name": "WLAN-Geräte"
+      },
+      "known_devices": {
+        "name": "Bekannte Netzwerkgeräte"
+      },
+      "dsl_noise_margin_down": {
+        "name": "DSL-Störabstand Download"
+      },
+      "dsl_noise_margin_up": {
+        "name": "DSL-Störabstand Upload"
+      },
+      "dsl_attenuation_down": {
+        "name": "DSL-Dämpfung Download"
+      },
+      "dsl_attenuation_up": {
+        "name": "DSL-Dämpfung Upload"
+      },
+      "cpu_temperature": {
+        "name": "CPU-Temperatur"
+      }
+    },
+    "binary_sensor": {
+      "internet_connected": {
+        "name": "Internet"
+      },
+      "link_up": {
+        "name": "Leitung"
+      },
+      "firmware_update": {
+        "name": "Firmware-Update"
+      }
+    },
+    "switch": {
+      "wlan": {
+        "name": "WLAN {network}"
+      },
+      "wlan_guest": {
+        "name": "Gast-WLAN {network}"
+      }
+    },
+    "button": {
+      "reboot": {
+        "name": "Neustart"
+      },
+      "reconnect": {
+        "name": "Neu verbinden"
+      }
+    }
+  },
+  "services": {
+    "reboot": {
+      "name": "FRITZ!Box neu starten",
+      "description": "Startet die FRITZ!Box neu. Nur für Administratoren.",
+      "fields": {
+        "entry_id": {
+          "name": "Eintrags-ID (optional)",
+          "description": "Eintrags-ID (optional)"
+        }
+      }
+    },
+    "reconnect": {
+      "name": "Internetverbindung neu aufbauen",
+      "description": "Trennt die Internetverbindung und baut sie neu auf (meist neue IP-Adresse). Nur für Administratoren.",
+      "fields": {
+        "entry_id": {
+          "name": "Eintrags-ID (optional)",
+          "description": "Eintrags-ID (optional)"
+        }
+      }
+    },
+    "set_wlan": {
+      "name": "WLAN schalten",
+      "description": "Schaltet ein WLAN-Netz (wlan1, wlan2, …) ein oder aus. Nur für Administratoren.",
+      "fields": {
+        "wlan": {
+          "name": "WLAN-Netz (wlan1, wlan2, …)",
+          "description": "WLAN-Netz (wlan1, wlan2, …)"
+        },
+        "enabled": {
+          "name": "Eingeschaltet",
+          "description": "Eingeschaltet"
+        },
+        "entry_id": {
+          "name": "Eintrags-ID (optional)",
+          "description": "Eintrags-ID (optional)"
+        }
+      }
+    },
+    "check_for_update": {
+      "name": "Auf neue Version prüfen",
+      "description": "Fragt GitHub nach einer neueren Version des FRITZ!Box Managers.",
+      "fields": {
+        "entry_id": {
+          "name": "Eintrags-ID (optional)",
+          "description": "Eintrags-ID (optional)"
+        }
+      }
+    }
+  }
+}

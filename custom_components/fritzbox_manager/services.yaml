@@ -1,0 +1,42 @@
+# SHA256 (Inhalt ab Zeile 2, d.h. dieser Datei ohne diese erste Zeile): 3f6f5da01cb13c75d6b3bb65778e92dc04a9b1b0706d5becd029bc49f30e68e9
+reboot:
+  fields:
+    entry_id:
+      required: false
+      example: "0123456789abcdef"
+      selector:
+        text:
+
+reconnect:
+  fields:
+    entry_id:
+      required: false
+      example: "0123456789abcdef"
+      selector:
+        text:
+
+set_wlan:
+  fields:
+    wlan:
+      required: true
+      example: "wlan1"
+      selector:
+        text:
+    enabled:
+      required: true
+      default: true
+      selector:
+        boolean:
+    entry_id:
+      required: false
+      example: "0123456789abcdef"
+      selector:
+        text:
+
+check_for_update:
+  fields:
+    entry_id:
+      required: false
+      example: "0123456789abcdef"
+      selector:
+        text:

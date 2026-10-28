@@ -1,0 +1,200 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "FRITZ!Box verbinden",
+        "description": "Vul het adres en de inloggegevens van je FRITZ!Box in. De gebruiker heeft het recht \"FRITZ!Box-instellingen\" nodig om te kunnen schakelen. Laat je de poort leeg, dan wordt de standaardpoort gebruikt.",
+        "data": {
+          "host": "Adres (IP of fritz.box)",
+          "port": "Poort (optioneel)",
+          "username": "Gebruikersnaam",
+          "password": "Wachtwoord",
+          "ssl": "Versleutelde verbinding (HTTPS)"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Aanmelding vernieuwen",
+        "description": "De FRITZ!Box op {host} heeft de aanmelding geweigerd. Vul de actuele inloggegevens in.",
+        "data": {
+          "username": "Gebruikersnaam",
+          "password": "Wachtwoord"
+        }
+      },
+      "reconfigure": {
+        "title": "Verbinding opnieuw instellen",
+        "data": {
+          "host": "Adres (IP of fritz.box)",
+          "port": "Poort (optioneel)",
+          "username": "Gebruikersnaam",
+          "password": "Wachtwoord",
+          "ssl": "Versleutelde verbinding (HTTPS)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "De FRITZ!Box is niet bereikbaar. Controleer adres, poort en of TR-064 actief is (Thuisnetwerk > Netwerk > Netwerkinstellingen > Toegang voor toepassingen toestaan).",
+      "invalid_auth": "Gebruikersnaam of wachtwoord werd geweigerd.",
+      "unknown": "Onverwachte fout. Details staan in het logboek van Home Assistant."
+    },
+    "abort": {
+      "already_configured": "Deze FRITZ!Box is al ingesteld.",
+      "reauth_successful": "De aanmelding is vernieuwd.",
+      "reconfigure_successful": "De verbinding is bijgewerkt.",
+      "unique_id_mismatch": "Dit is een andere FRITZ!Box dan de ingestelde."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "FRITZ!Box Manager",
+        "description": "Geïnstalleerde versie: {version}. {update_info}",
+        "data": {
+          "scan_interval": "Ophaalinterval (seconden)",
+          "events_enabled": "Home Assistant-gebeurtenissen versturen (internet weg/terug, nieuw IP, firmware-update)",
+          "cpu_temperature": "CPU-temperatuur ophalen (experimenteel, gebruikt een niet openbaar gedocumenteerde interface van de box)"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "firmware": {
+        "name": "Firmware"
+      },
+      "uptime": {
+        "name": "Looptijd van de box"
+      },
+      "connection_uptime": {
+        "name": "Looptijd van de verbinding"
+      },
+      "external_ip": {
+        "name": "Extern IPv4-adres"
+      },
+      "external_ipv6": {
+        "name": "Extern IPv6-adres"
+      },
+      "ipv6_prefix": {
+        "name": "IPv6-prefix"
+      },
+      "download_rate": {
+        "name": "Downloadsnelheid"
+      },
+      "upload_rate": {
+        "name": "Uploadsnelheid"
+      },
+      "max_download_rate": {
+        "name": "Maximale downloadsnelheid (lijn)"
+      },
+      "max_upload_rate": {
+        "name": "Maximale uploadsnelheid (lijn)"
+      },
+      "bytes_received": {
+        "name": "Ontvangen data"
+      },
+      "bytes_sent": {
+        "name": "Verzonden data"
+      },
+      "last_connection_error": {
+        "name": "Laatste verbindingsfout"
+      },
+      "wlan_clients": {
+        "name": "Wifi-apparaten"
+      },
+      "known_devices": {
+        "name": "Bekende netwerkapparaten"
+      },
+      "dsl_noise_margin_down": {
+        "name": "DSL-ruismarge download"
+      },
+      "dsl_noise_margin_up": {
+        "name": "DSL-ruismarge upload"
+      },
+      "dsl_attenuation_down": {
+        "name": "DSL-demping download"
+      },
+      "dsl_attenuation_up": {
+        "name": "DSL-demping upload"
+      },
+      "cpu_temperature": {
+        "name": "CPU-temperatuur"
+      }
+    },
+    "binary_sensor": {
+      "internet_connected": {
+        "name": "Internet"
+      },
+      "link_up": {
+        "name": "Lijn"
+      },
+      "firmware_update": {
+        "name": "Firmware-update"
+      }
+    },
+    "switch": {
+      "wlan": {
+        "name": "Wifi {network}"
+      },
+      "wlan_guest": {
+        "name": "Gastwifi {network}"
+      }
+    },
+    "button": {
+      "reboot": {
+        "name": "Herstart"
+      },
+      "reconnect": {
+        "name": "Opnieuw verbinden"
+      }
+    }
+  },
+  "services": {
+    "reboot": {
+      "name": "FRITZ!Box herstarten",
+      "description": "Herstart de FRITZ!Box. Alleen voor beheerders.",
+      "fields": {
+        "entry_id": {
+          "name": "Item-ID (optioneel)",
+          "description": "Item-ID (optioneel)"
+        }
+      }
+    },
+    "reconnect": {
+      "name": "Internetverbinding opnieuw opbouwen",
+      "description": "Verbreekt de internetverbinding en bouwt die opnieuw op (meestal nieuw IP-adres). Alleen voor beheerders.",
+      "fields": {
+        "entry_id": {
+          "name": "Item-ID (optioneel)",
+          "description": "Item-ID (optioneel)"
+        }
+      }
+    },
+    "set_wlan": {
+      "name": "Wifi schakelen",
+      "description": "Schakelt een wifi-netwerk (wlan1, wlan2, …) in of uit. Alleen voor beheerders.",
+      "fields": {
+        "wlan": {
+          "name": "Wifi-netwerk (wlan1, wlan2, …)",
+          "description": "Wifi-netwerk (wlan1, wlan2, …)"
+        },
+        "enabled": {
+          "name": "Ingeschakeld",
+          "description": "Ingeschakeld"
+        },
+        "entry_id": {
+          "name": "Item-ID (optioneel)",
+          "description": "Item-ID (optioneel)"
+        }
+      }
+    },
+    "check_for_update": {
+      "name": "Op nieuwe versie controleren",
+      "description": "Vraagt GitHub naar een nieuwere versie van FRITZ!Box Manager.",
+      "fields": {
+        "entry_id": {
+          "name": "Item-ID (optioneel)",
+          "description": "Item-ID (optioneel)"
+        }
+      }
+    }
+  }
+}

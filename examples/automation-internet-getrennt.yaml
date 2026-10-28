@@ -1,0 +1,12 @@
+# SHA256 (Inhalt ab Zeile 2, d.h. dieser Datei ohne diese erste Zeile): 140bbabd0f02ca95b8d5578eb5ccb83778bd9a4a57c4882494ef1263655209ac
+alias: FRITZ!Box - Internet getrennt melden
+description: Sendet eine Nachricht, wenn die Box die Internetverbindung verliert.
+triggers:
+  - trigger: event
+    event_type: fritzbox_manager_internet_offline
+actions:
+  - action: persistent_notification.create
+    data:
+      title: Internet getrennt
+      message: Die FRITZ!Box hat keine Verbindung zum Internet.
+mode: single

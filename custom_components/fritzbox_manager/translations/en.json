@@ -1,0 +1,200 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect FRITZ!Box",
+        "description": "Enter the address and credentials of your FRITZ!Box. The user needs the \"FRITZ!Box settings\" permission for switching to work. Leave the port empty to use the default.",
+        "data": {
+          "host": "Address (IP or fritz.box)",
+          "port": "Port (optional)",
+          "username": "Username",
+          "password": "Password",
+          "ssl": "Encrypted connection (HTTPS)"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Renew sign-in",
+        "description": "The FRITZ!Box at {host} rejected the sign-in. Enter the current credentials.",
+        "data": {
+          "username": "Username",
+          "password": "Password"
+        }
+      },
+      "reconfigure": {
+        "title": "Reconfigure connection",
+        "data": {
+          "host": "Address (IP or fritz.box)",
+          "port": "Port (optional)",
+          "username": "Username",
+          "password": "Password",
+          "ssl": "Encrypted connection (HTTPS)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "The FRITZ!Box cannot be reached. Check address, port and that TR-064 is enabled (Home Network > Network > Network Settings > Allow access for applications).",
+      "invalid_auth": "Username or password was rejected.",
+      "unknown": "Unexpected error. See the Home Assistant log for details."
+    },
+    "abort": {
+      "already_configured": "This FRITZ!Box is already set up.",
+      "reauth_successful": "Sign-in was renewed.",
+      "reconfigure_successful": "The connection was updated.",
+      "unique_id_mismatch": "This is a different FRITZ!Box than the one configured."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "FRITZ!Box Manager",
+        "description": "Installed version: {version}. {update_info}",
+        "data": {
+          "scan_interval": "Polling interval (seconds)",
+          "events_enabled": "Send Home Assistant events (internet down/up, new IP, firmware update)",
+          "cpu_temperature": "Read CPU temperature (experimental, uses an undocumented interface of the box)"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "firmware": {
+        "name": "Firmware"
+      },
+      "uptime": {
+        "name": "Box uptime"
+      },
+      "connection_uptime": {
+        "name": "Connection uptime"
+      },
+      "external_ip": {
+        "name": "External IPv4 address"
+      },
+      "external_ipv6": {
+        "name": "External IPv6 address"
+      },
+      "ipv6_prefix": {
+        "name": "IPv6 prefix"
+      },
+      "download_rate": {
+        "name": "Download rate"
+      },
+      "upload_rate": {
+        "name": "Upload rate"
+      },
+      "max_download_rate": {
+        "name": "Maximum download rate (line)"
+      },
+      "max_upload_rate": {
+        "name": "Maximum upload rate (line)"
+      },
+      "bytes_received": {
+        "name": "Data received"
+      },
+      "bytes_sent": {
+        "name": "Data sent"
+      },
+      "last_connection_error": {
+        "name": "Last connection error"
+      },
+      "wlan_clients": {
+        "name": "Wi-Fi devices"
+      },
+      "known_devices": {
+        "name": "Known network devices"
+      },
+      "dsl_noise_margin_down": {
+        "name": "DSL noise margin download"
+      },
+      "dsl_noise_margin_up": {
+        "name": "DSL noise margin upload"
+      },
+      "dsl_attenuation_down": {
+        "name": "DSL attenuation download"
+      },
+      "dsl_attenuation_up": {
+        "name": "DSL attenuation upload"
+      },
+      "cpu_temperature": {
+        "name": "CPU temperature"
+      }
+    },
+    "binary_sensor": {
+      "internet_connected": {
+        "name": "Internet"
+      },
+      "link_up": {
+        "name": "Line"
+      },
+      "firmware_update": {
+        "name": "Firmware update"
+      }
+    },
+    "switch": {
+      "wlan": {
+        "name": "Wi-Fi {network}"
+      },
+      "wlan_guest": {
+        "name": "Guest Wi-Fi {network}"
+      }
+    },
+    "button": {
+      "reboot": {
+        "name": "Restart"
+      },
+      "reconnect": {
+        "name": "Reconnect"
+      }
+    }
+  },
+  "services": {
+    "reboot": {
+      "name": "Restart FRITZ!Box",
+      "description": "Restarts the FRITZ!Box. Administrators only.",
+      "fields": {
+        "entry_id": {
+          "name": "Entry ID (optional)",
+          "description": "Entry ID (optional)"
+        }
+      }
+    },
+    "reconnect": {
+      "name": "Re-establish internet connection",
+      "description": "Drops the internet connection and re-establishes it (usually a new IP address). Administrators only.",
+      "fields": {
+        "entry_id": {
+          "name": "Entry ID (optional)",
+          "description": "Entry ID (optional)"
+        }
+      }
+    },
+    "set_wlan": {
+      "name": "Switch Wi-Fi",
+      "description": "Turns a Wi-Fi network (wlan1, wlan2, …) on or off. Administrators only.",
+      "fields": {
+        "wlan": {
+          "name": "Wi-Fi network (wlan1, wlan2, …)",
+          "description": "Wi-Fi network (wlan1, wlan2, …)"
+        },
+        "enabled": {
+          "name": "Enabled",
+          "description": "Enabled"
+        },
+        "entry_id": {
+          "name": "Entry ID (optional)",
+          "description": "Entry ID (optional)"
+        }
+      }
+    },
+    "check_for_update": {
+      "name": "Check for new version",
+      "description": "Asks GitHub for a newer version of FRITZ!Box Manager.",
+      "fields": {
+        "entry_id": {
+          "name": "Entry ID (optional)",
+          "description": "Entry ID (optional)"
+        }
+      }
+    }
+  }
+}

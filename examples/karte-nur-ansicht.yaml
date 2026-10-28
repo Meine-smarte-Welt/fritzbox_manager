@@ -1,0 +1,6 @@
+# SHA256 (Inhalt ab Zeile 2, d.h. dieser Datei ohne diese erste Zeile): d575c1b8ba1865586b634ddb0fca9ba86e992bb97bbf7ae586eca80ffd7afde6
+# Nur lesen, ohne Schalter (z. B. für Gäste-Dashboards)
+type: custom:fritzbox-manager-card
+read_only: true
+show_settings: false
+show_modules: false

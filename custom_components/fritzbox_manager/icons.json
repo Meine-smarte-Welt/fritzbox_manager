@@ -1,0 +1,45 @@
+{
+  "entity": {
+    "sensor": {
+      "firmware": {"default": "mdi:chip"},
+      "uptime": {"default": "mdi:timer-outline"},
+      "connection_uptime": {"default": "mdi:timer-sync-outline"},
+      "external_ip": {"default": "mdi:ip-network"},
+      "external_ipv6": {"default": "mdi:ip-network-outline"},
+      "ipv6_prefix": {"default": "mdi:ip-network-outline"},
+      "download_rate": {"default": "mdi:download-network"},
+      "upload_rate": {"default": "mdi:upload-network"},
+      "max_download_rate": {"default": "mdi:speedometer"},
+      "max_upload_rate": {"default": "mdi:speedometer"},
+      "bytes_received": {"default": "mdi:database-arrow-down"},
+      "bytes_sent": {"default": "mdi:database-arrow-up"},
+      "last_connection_error": {"default": "mdi:alert-circle-outline"},
+      "wlan_clients": {"default": "mdi:wifi"},
+      "known_devices": {"default": "mdi:devices"},
+      "dsl_noise_margin_down": {"default": "mdi:sine-wave"},
+      "dsl_noise_margin_up": {"default": "mdi:sine-wave"},
+      "dsl_attenuation_down": {"default": "mdi:signal-distance-variant"},
+      "dsl_attenuation_up": {"default": "mdi:signal-distance-variant"},
+      "cpu_temperature": {"default": "mdi:thermometer"}
+    },
+    "binary_sensor": {
+      "internet_connected": {"default": "mdi:web", "state": {"off": "mdi:web-off"}},
+      "link_up": {"default": "mdi:lan-connect", "state": {"off": "mdi:lan-disconnect"}},
+      "firmware_update": {"default": "mdi:update"}
+    },
+    "switch": {
+      "wlan": {"default": "mdi:wifi", "state": {"off": "mdi:wifi-off"}},
+      "wlan_guest": {"default": "mdi:wifi-star", "state": {"off": "mdi:wifi-off"}}
+    },
+    "button": {
+      "reboot": {"default": "mdi:restart"},
+      "reconnect": {"default": "mdi:web-refresh"}
+    }
+  },
+  "services": {
+    "reboot": {"service": "mdi:restart"},
+    "reconnect": {"service": "mdi:web-refresh"},
+    "set_wlan": {"service": "mdi:wifi-cog"},
+    "check_for_update": {"service": "mdi:update"}
+  }
+}
