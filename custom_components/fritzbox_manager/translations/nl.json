@@ -51,7 +51,10 @@
         "data": {
           "scan_interval": "Ophaalinterval (seconden)",
           "events_enabled": "Home Assistant-gebeurtenissen versturen (internet weg/terug, nieuw IP, firmware-update)",
-          "cpu_temperature": "CPU-temperatuur ophalen (experimenteel, gebruikt een niet openbaar gedocumenteerde interface van de box)"
+          "cpu_temperature": "CPU-temperatuur ophalen (experimenteel, gebruikt een niet openbaar gedocumenteerde interface van de box)",
+          "experimental_enabled": "Experimentele functies toestaan (ongetest, hoofdschakelaar)",
+          "backup_enabled": "Experimenteel: back-up van de FRITZ!Box-instellingen (vereist de hoofdschakelaar)",
+          "backup_keep": "Back-up: aantal te bewaren bestanden (oudere worden verwijderd)"
         }
       }
     }
@@ -190,6 +193,20 @@
       "name": "Op nieuwe versie controleren",
       "description": "Vraagt GitHub naar een nieuwere versie van FRITZ!Box Manager.",
       "fields": {
+        "entry_id": {
+          "name": "Item-ID (optioneel)",
+          "description": "Item-ID (optioneel)"
+        }
+      }
+    },
+    "create_backup": {
+      "name": "Back-up van instellingen maken (experimenteel)",
+      "description": "Haalt de instellingen van de FRITZ!Box op als versleutelde back-up en slaat die op in de configuratiemap. Experimenteel: alleen met de hoofdschakelaar en de back-upschakelaar in de opties. Alleen voor beheerders.",
+      "fields": {
+        "password": {
+          "name": "Back-upwachtwoord",
+          "description": "Beschermt het back-upbestand. Zonder dit wachtwoord kan de back-up niet in de FRITZ!Box worden teruggezet. Het wordt niet opgeslagen."
+        },
         "entry_id": {
           "name": "Item-ID (optioneel)",
           "description": "Item-ID (optioneel)"

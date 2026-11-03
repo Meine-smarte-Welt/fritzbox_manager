@@ -1,4 +1,4 @@
-# SHA256 (Inhalt ab Zeile 2, d.h. dieser Datei ohne diese erste Zeile): b57f3e880021810803d82cc8b617382d74c85dd52ab1cea88382b4748ea47de1
+# SHA256 (Inhalt ab Zeile 2, d.h. dieser Datei ohne diese erste Zeile): 7ecf6fcc1d2aa156b3dede525dc066444604c3388d9f7db870947c1d6430bc78
 """WebSocket-Schnittstelle für die Karte (subscribe / action)."""
 
 from __future__ import annotations
@@ -14,11 +14,13 @@ from homeassistant.exceptions import HomeAssistantError
 from .const import (
     ACTION_CHECK_UPDATE,
     ACTION_CLEAR_EVENTS,
+    ACTION_CREATE_BACKUP,
     ACTION_REBOOT,
     ACTION_RECONNECT,
     ACTION_SET_OPTION,
     ACTION_SET_WLAN,
     ACTIONS,
+    BACKUP_PASSWORD_MAX,
     DOMAIN,
     SETTABLE_OPTIONS,
     WS_ACTION,
@@ -91,6 +93,8 @@ async def ws_subscribe(hass: HomeAssistant, connection: Any, msg: dict[str, Any]
         vol.Optional("enabled"): bool,
         vol.Optional("option"): vol.In(SETTABLE_OPTIONS),
         vol.Optional("value"): vol.Any(bool, int, float),
+        # Kennwort für das (experimentelle) Backup: wird nicht gespeichert oder protokolliert.
+        vol.Optional("password"): vol.All(str, vol.Length(max=BACKUP_PASSWORD_MAX)),
     }
 )
 @ha_ws.async_response
@@ -120,6 +124,14 @@ async def ws_action(hass: HomeAssistant, connection: Any, msg: dict[str, Any]) -
         elif action == ACTION_CLEAR_EVENTS:
             manager.async_clear_log()
             manager.respond(action)
+        elif action == ACTION_CREATE_BACKUP:
+            # Experimentell: ohne Hauptschalter und Backup-Schalter bleibt das Backend still.
+            if not manager.backup_enabled:
+                raise HomeAssistantError("Das Backup ist experimentell und nicht aktiviert.")
+            password = msg.get("password")
+            if not isinstance(password, str) or not password:
+                raise HomeAssistantError("Bitte ein Kennwort für das Backup angeben.")
+            manager.run_in_background(action, lambda: manager.async_create_backup(password))
     except HomeAssistantError as ex:
         connection.send_error(msg["id"], ha_ws.ERR_INVALID_FORMAT, str(ex))
         return

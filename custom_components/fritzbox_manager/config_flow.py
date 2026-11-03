@@ -1,4 +1,4 @@
-# SHA256 (Inhalt ab Zeile 2, d.h. dieser Datei ohne diese erste Zeile): 22468894b466324806a33afb95e586e728fd0a0a3d155fb2fca2231ad2b00ae7
+# SHA256 (Inhalt ab Zeile 2, d.h. dieser Datei ohne diese erste Zeile): 8820266f5e8aafddb01230f9506a4e957523ccdaaade44fa095e59f830722a27
 """Config Flow: Einrichtung, Anmeldung erneuern, Neu konfigurieren, Optionen."""
 
 from __future__ import annotations
@@ -19,16 +19,24 @@ from homeassistant.helpers.selector import (
 )
 
 from .const import (
+    CONF_BACKUP_ENABLED,
+    CONF_BACKUP_KEEP,
     CONF_CPU_TEMPERATURE,
     CONF_EVENTS_ENABLED,
+    CONF_EXPERIMENTAL_ENABLED,
     CONF_SCAN_INTERVAL,
+    DEFAULT_BACKUP_ENABLED,
+    DEFAULT_BACKUP_KEEP,
     DEFAULT_CPU_TEMPERATURE,
     DEFAULT_EVENTS_ENABLED,
+    DEFAULT_EXPERIMENTAL_ENABLED,
     DEFAULT_HOST,
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_USERNAME,
     DOMAIN,
+    MAX_BACKUP_KEEP,
     MAX_SCAN_INTERVAL,
+    MIN_BACKUP_KEEP,
     MIN_SCAN_INTERVAL,
     VERSION,
 )
@@ -157,6 +165,9 @@ class FritzOptionsFlow(OptionsFlow):
                     CONF_SCAN_INTERVAL: int(user_input[CONF_SCAN_INTERVAL]),
                     CONF_EVENTS_ENABLED: bool(user_input[CONF_EVENTS_ENABLED]),
                     CONF_CPU_TEMPERATURE: bool(user_input[CONF_CPU_TEMPERATURE]),
+                    CONF_EXPERIMENTAL_ENABLED: bool(user_input[CONF_EXPERIMENTAL_ENABLED]),
+                    CONF_BACKUP_ENABLED: bool(user_input[CONF_BACKUP_ENABLED]),
+                    CONF_BACKUP_KEEP: int(user_input[CONF_BACKUP_KEEP]),
                 }
             )
         options = self.config_entry.options
@@ -182,6 +193,26 @@ class FritzOptionsFlow(OptionsFlow):
                     CONF_CPU_TEMPERATURE,
                     default=options.get(CONF_CPU_TEMPERATURE, DEFAULT_CPU_TEMPERATURE),
                 ): BooleanSelector(),
+                # Experimentell (ungeprüft): Hauptschalter und Backup, beide standardmäßig aus.
+                vol.Required(
+                    CONF_EXPERIMENTAL_ENABLED,
+                    default=options.get(CONF_EXPERIMENTAL_ENABLED, DEFAULT_EXPERIMENTAL_ENABLED),
+                ): BooleanSelector(),
+                vol.Required(
+                    CONF_BACKUP_ENABLED,
+                    default=options.get(CONF_BACKUP_ENABLED, DEFAULT_BACKUP_ENABLED),
+                ): BooleanSelector(),
+                vol.Required(
+                    CONF_BACKUP_KEEP,
+                    default=options.get(CONF_BACKUP_KEEP, DEFAULT_BACKUP_KEEP),
+                ): NumberSelector(
+                    NumberSelectorConfig(
+                        min=MIN_BACKUP_KEEP,
+                        max=MAX_BACKUP_KEEP,
+                        step=1,
+                        mode=NumberSelectorMode.BOX,
+                    )
+                ),
             }
         )
         return self.async_show_form(

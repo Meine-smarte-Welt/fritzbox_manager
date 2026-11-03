@@ -1,4 +1,4 @@
-# SHA256 (Inhalt ab Zeile 2, d.h. dieser Datei ohne diese erste Zeile): fc658021c453b9dee889c91cb3cfec02a848a76ba3cbad0158963a23f7864833
+# SHA256 (Inhalt ab Zeile 2, d.h. dieser Datei ohne diese erste Zeile): 554dd7c8709585897862d8b14a228deb53a29049ba22e3f534a7f38a071771e9
 """Die Integration FRITZ!Box Manager."""
 
 from __future__ import annotations
@@ -23,12 +23,15 @@ from . import websocket_api
 from .const import (
     ATTR_ENABLED,
     ATTR_ENTRY_ID,
+    ATTR_PASSWORD,
     ATTR_WLAN,
+    BACKUP_PASSWORD_MAX,
     CARD_STATIC_URL,
     CARD_URL_BASE,
     DOMAIN,
     PLATFORMS,
     SERVICE_CHECK_UPDATE,
+    SERVICE_CREATE_BACKUP,
     SERVICE_REBOOT,
     SERVICE_RECONNECT,
     SERVICE_SET_WLAN,
@@ -85,6 +88,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async def _check_update(call: ServiceCall) -> None:
         await _manager(call).async_check_update()
 
+    async def _create_backup(call: ServiceCall) -> None:
+        # Experimentell: der Manager lehnt ab, solange Hauptschalter und Backup-Schalter aus sind.
+        await _manager(call).async_create_backup(call.data[ATTR_PASSWORD])
+
     async_register_admin_service(
         hass, DOMAIN, SERVICE_REBOOT, _reboot, vol.Schema(_ENTRY_SCHEMA)
     )
@@ -107,6 +114,18 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async_register_admin_service(
         hass, DOMAIN, SERVICE_CHECK_UPDATE, _check_update, vol.Schema(_ENTRY_SCHEMA)
     )
+    async_register_admin_service(
+        hass,
+        DOMAIN,
+        SERVICE_CREATE_BACKUP,
+        _create_backup,
+        vol.Schema(
+            {
+                **_ENTRY_SCHEMA,
+                vol.Required(ATTR_PASSWORD): vol.All(cv.string, vol.Length(min=1, max=BACKUP_PASSWORD_MAX)),
+            }
+        ),
+    )
     return True
 
 
@@ -115,6 +134,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: FritzConfigEntry) -> boo
     manager = FritzManager(hass, entry)
     await manager.async_config_entry_first_refresh()
     entry.runtime_data = manager
+    await manager.async_refresh_backups()
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(_async_options_updated))
@@ -131,8 +151,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: FritzConfigEntry) -> bo
 
 
 async def _async_options_updated(hass: HomeAssistant, entry: FritzConfigEntry) -> None:
-    """Optionen übernehmen, ohne neu zu laden (nur das Intervall ändert sich live)."""
+    """Optionen übernehmen, ohne neu zu laden (Intervall und Backup-Liste ändern sich live)."""
     entry.runtime_data.apply_options()
+    await entry.runtime_data.async_refresh_backups()
 
 
 # --- Mitgelieferte Karte (fritzbox-manager-card.js) -------------------------------

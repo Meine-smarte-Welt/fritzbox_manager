@@ -51,7 +51,10 @@
         "data": {
           "scan_interval": "Polling interval (seconds)",
           "events_enabled": "Send Home Assistant events (internet down/up, new IP, firmware update)",
-          "cpu_temperature": "Read CPU temperature (experimental, uses an undocumented interface of the box)"
+          "cpu_temperature": "Read CPU temperature (experimental, uses an undocumented interface of the box)",
+          "experimental_enabled": "Allow experimental features (unverified, master switch)",
+          "backup_enabled": "Experimental: backup of the FRITZ!Box settings (needs the master switch)",
+          "backup_keep": "Backup: number of files to keep (older ones are deleted)"
         }
       }
     }
@@ -190,6 +193,20 @@
       "name": "Check for new version",
       "description": "Asks GitHub for a newer version of FRITZ!Box Manager.",
       "fields": {
+        "entry_id": {
+          "name": "Entry ID (optional)",
+          "description": "Entry ID (optional)"
+        }
+      }
+    },
+    "create_backup": {
+      "name": "Create settings backup (experimental)",
+      "description": "Fetches the FRITZ!Box settings as an encrypted backup and stores it in the configuration folder. Experimental: only with the master switch and the backup switch in the options. Administrators only.",
+      "fields": {
+        "password": {
+          "name": "Backup password",
+          "description": "Protects the backup file. Without this password the backup cannot be restored to the FRITZ!Box. It is not stored."
+        },
         "entry_id": {
           "name": "Entry ID (optional)",
           "description": "Entry ID (optional)"

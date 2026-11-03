@@ -40,6 +40,7 @@
     "reboot": {"service": "mdi:restart"},
     "reconnect": {"service": "mdi:web-refresh"},
     "set_wlan": {"service": "mdi:wifi-cog"},
-    "check_for_update": {"service": "mdi:update"}
+    "check_for_update": {"service": "mdi:update"},
+    "create_backup": {"service": "mdi:backup-restore"}
   }
 }

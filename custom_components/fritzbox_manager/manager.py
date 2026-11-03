@@ -1,4 +1,4 @@
-# SHA256 (Inhalt ab Zeile 2, d.h. dieser Datei ohne diese erste Zeile): f86875fed6f43512c3473a1479ac8cab3604e120d37991c11d5a4ad0041585de
+# SHA256 (Inhalt ab Zeile 2, d.h. dieser Datei ohne diese erste Zeile): 87125779e6c53297e7d89dc7e20bc66dbd40f4f24b21cf516ada33c9de645c24
 """Manager: hält den Zustand der FRITZ!Box, fragt sie ab und meldet Änderungen."""
 
 from __future__ import annotations
@@ -8,6 +8,7 @@ from collections import deque
 from collections.abc import Callable
 from datetime import datetime, timedelta, timezone
 import logging
+from pathlib import Path
 from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
@@ -17,27 +18,40 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
+from .backup import backup_filename, list_backups, prune_backups, write_backup
 from .const import (
+    BACKUP_DIR_NAME,
+    BACKUP_PASSWORD_MAX,
+    CONF_BACKUP_ENABLED,
+    CONF_BACKUP_KEEP,
     CONF_CPU_TEMPERATURE,
     CONF_EVENTS_ENABLED,
+    CONF_EXPERIMENTAL_ENABLED,
     CONF_SCAN_INTERVAL,
+    DEFAULT_BACKUP_ENABLED,
+    DEFAULT_BACKUP_KEEP,
     DEFAULT_CPU_TEMPERATURE,
     DEFAULT_EVENTS_ENABLED,
+    DEFAULT_EXPERIMENTAL_ENABLED,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
+    EVENT_BACKUP_CREATED,
     EVENT_INTERNET_OFFLINE,
     EVENT_INTERNET_ONLINE,
     EVENT_IP_CHANGED,
     EVENT_UPDATE_AVAILABLE,
     MANUFACTURER,
+    MAX_BACKUP_KEEP,
     MAX_LOG_ENTRIES,
     MAX_SCAN_INTERVAL,
+    MIN_BACKUP_KEEP,
     MIN_SCAN_INTERVAL,
     SETTABLE_OPTIONS,
     VERSION,
 )
 from .fritz_client import (
     FritzActionFailed,
+    FritzBackupError,
     FritzCannotConnect,
     FritzClient,
     FritzInvalidAuth,
@@ -49,6 +63,18 @@ _LOGGER = logging.getLogger(__name__)
 # Nach einem Neustart ist die Box eine Weile nicht erreichbar. In dieser Zeit
 # gilt das nicht als Verbindungsverlust.
 REBOOT_GRACE = timedelta(minutes=4)
+
+# Meldungen zum Backup (Schlüssel = ``FritzBackupError.reason``).
+BACKUP_ERRORS = {
+    "no_permission": "Die FRITZ!Box hat das Backup abgelehnt: Dem Benutzer fehlt das Recht „FRITZ!Box Einstellungen“.",
+    "unsupported": "Diese FRITZ!Box bietet kein Backup über TR-064 an.",
+    "refused": "Die FRITZ!Box hat das Backup nicht ausgeführt. Mögliche Ursachen: fehlendes Recht „FRITZ!Box Einstellungen“ oder eine aktive Zwei-Faktor-Authentifizierung des Benutzers.",
+    "password_short": "Das Backup-Kennwort ist der FRITZ!Box zu kurz.",
+    "password_long": "Das Backup-Kennwort ist der FRITZ!Box zu lang.",
+    "password_chars": "Das Backup-Kennwort enthält Zeichen, die die FRITZ!Box nicht annimmt.",
+    "password_invalid": "Die FRITZ!Box hat das Backup-Kennwort nicht angenommen.",
+}
+BACKUP_FILE_ERROR = "Die FRITZ!Box hat keine gültige Backup-Datei geliefert ({reason})."
 
 
 class FritzManager(DataUpdateCoordinator[dict[str, Any]]):
@@ -82,6 +108,7 @@ class FritzManager(DataUpdateCoordinator[dict[str, Any]]):
         self._was_unreachable = False
         self._reboot_until: datetime | None = None
         self._tasks: set[asyncio.Task] = set()
+        self.backups: list[dict[str, Any]] = []
 
     # --- Optionen ----------------------------------------------------------
     @staticmethod
@@ -104,6 +131,30 @@ class FritzManager(DataUpdateCoordinator[dict[str, Any]]):
     def cpu_enabled(self) -> bool:
         return bool(self.config_entry.options.get(CONF_CPU_TEMPERATURE, DEFAULT_CPU_TEMPERATURE))
 
+    @property
+    def experimental_enabled(self) -> bool:
+        """Hauptschalter für alle experimentellen Funktionen (Standard aus)."""
+        return bool(self.config_entry.options.get(CONF_EXPERIMENTAL_ENABLED, DEFAULT_EXPERIMENTAL_ENABLED))
+
+    @property
+    def backup_enabled(self) -> bool:
+        """Backup ist nur aktiv, wenn Hauptschalter UND eigener Schalter an sind."""
+        return self.experimental_enabled and bool(
+            self.config_entry.options.get(CONF_BACKUP_ENABLED, DEFAULT_BACKUP_ENABLED)
+        )
+
+    @property
+    def backup_keep(self) -> int:
+        try:
+            value = int(self.config_entry.options.get(CONF_BACKUP_KEEP, DEFAULT_BACKUP_KEEP))
+        except (TypeError, ValueError):
+            value = DEFAULT_BACKUP_KEEP
+        return max(MIN_BACKUP_KEEP, min(MAX_BACKUP_KEEP, value))
+
+    @property
+    def backup_dir(self) -> Path:
+        return Path(self.hass.config.path(BACKUP_DIR_NAME))
+
     @callback
     def apply_options(self) -> None:
         """Geänderte Optionen übernehmen, ohne den Eintrag neu zu laden."""
@@ -121,6 +172,12 @@ class FritzManager(DataUpdateCoordinator[dict[str, Any]]):
             value = int(value)
             if not MIN_SCAN_INTERVAL <= value <= MAX_SCAN_INTERVAL:
                 raise HomeAssistantError("Intervall außerhalb des erlaubten Bereichs.")
+        elif option == CONF_BACKUP_KEEP:
+            if isinstance(value, bool) or not isinstance(value, (int, float)):
+                raise HomeAssistantError("Ungültige Anzahl.")
+            value = int(value)
+            if not MIN_BACKUP_KEEP <= value <= MAX_BACKUP_KEEP:
+                raise HomeAssistantError("Anzahl außerhalb des erlaubten Bereichs.")
         elif not isinstance(value, bool):
             raise HomeAssistantError("Ungültiger Wert.")
         options = {**self.config_entry.options, option: value}
@@ -270,6 +327,72 @@ class FritzManager(DataUpdateCoordinator[dict[str, Any]]):
         await asyncio.sleep(3)
         await self.async_request_refresh()
 
+    # --- Backup (EXPERIMENTELL) -------------------------------------------------------
+    async def async_refresh_backups(self) -> None:
+        """Liste der gespeicherten Backups neu lesen (leer, solange das Backup aus ist)."""
+        if not self.backup_enabled:
+            self.backups = []
+        else:
+            self.backups = await self.hass.async_add_executor_job(list_backups, self.backup_dir)
+        self.async_update_listeners()
+
+    @staticmethod
+    def _check_backup_password(password: Any) -> str:
+        if not isinstance(password, str) or not password:
+            raise HomeAssistantError("Bitte ein Kennwort für das Backup angeben.")
+        if len(password) > BACKUP_PASSWORD_MAX:
+            raise HomeAssistantError("Das Backup-Kennwort ist zu lang.")
+        if any(ord(ch) < 32 or ord(ch) == 127 for ch in password):
+            raise HomeAssistantError("Das Backup-Kennwort enthält Steuerzeichen.")
+        return password
+
+    async def async_create_backup(self, password: Any) -> str:
+        """Backup der Box-Einstellungen holen und speichern. Gibt den Dateinamen zurück.
+
+        Das Kennwort schützt die Datei, wird nur durchgereicht und weder gespeichert noch
+        protokolliert. Ohne es lässt sich das Backup später nicht in die Box einspielen.
+        """
+        if not self.backup_enabled:
+            raise HomeAssistantError("Das Backup ist experimentell und nicht aktiviert.")
+        password = self._check_backup_password(password)
+        if "backup" in self.jobs:
+            raise HomeAssistantError("Es läuft bereits ein Backup.")
+        self.jobs["backup"] = datetime.now(timezone.utc).isoformat()
+        self.async_update_listeners()
+        try:
+            try:
+                data = await self.hass.async_add_executor_job(self.client.export_config, password)
+            except FritzBackupError as ex:
+                message = BACKUP_ERRORS.get(ex.reason) or BACKUP_FILE_ERROR.format(reason=ex.reason)
+                raise HomeAssistantError(message) from None
+            except FritzInvalidAuth as ex:
+                raise HomeAssistantError("Anmeldung an der FRITZ!Box abgelehnt.") from ex
+            except FritzCannotConnect as ex:
+                raise HomeAssistantError("FRITZ!Box nicht erreichbar.") from ex
+            device = (self.data or {}).get("device", {})
+            filename = backup_filename(
+                device.get("model"), device.get("firmware"), datetime.now().astimezone()
+            )
+            directory = self.backup_dir
+            try:
+                filename = await self.hass.async_add_executor_job(write_backup, directory, filename, data)
+                await self.hass.async_add_executor_job(prune_backups, directory, self.backup_keep)
+            except OSError as ex:
+                _LOGGER.warning("Backup konnte nicht gespeichert werden: %s", type(ex).__name__)
+                raise HomeAssistantError(
+                    "Das Backup konnte nicht gespeichert werden (Schreibrechte im Konfigurationsordner prüfen)."
+                ) from None
+        finally:
+            self.jobs.pop("backup", None)
+            self.async_update_listeners()
+        self._log("backup_created", file=filename, size=len(data))
+        self._fire(
+            EVENT_BACKUP_CREATED,
+            {"entry_id": self.config_entry.entry_id, "filename": filename, "size": len(data)},
+        )
+        await self.async_refresh_backups()
+        return filename
+
     async def async_check_update(self) -> dict[str, Any]:
         info = await self.update_checker.async_info(force=True)
         self.async_update_listeners()
@@ -331,9 +454,17 @@ class FritzManager(DataUpdateCoordinator[dict[str, Any]]):
                 CONF_SCAN_INTERVAL: self.scan_interval,
                 CONF_EVENTS_ENABLED: self.events_enabled,
                 CONF_CPU_TEMPERATURE: self.cpu_enabled,
+                CONF_EXPERIMENTAL_ENABLED: self.experimental_enabled,
+                CONF_BACKUP_ENABLED: bool(
+                    self.config_entry.options.get(CONF_BACKUP_ENABLED, DEFAULT_BACKUP_ENABLED)
+                ),
+                CONF_BACKUP_KEEP: self.backup_keep,
             },
             "events": list(self.log),
         }
+        # Experimentell: nur für Administratoren und nur, wenn Hauptschalter und Backup an sind.
+        if is_admin and self.backup_enabled:
+            snap["backups"] = {"folder": BACKUP_DIR_NAME, "files": self.backups[:50]}
         if is_admin:
             snap["host"] = self.config_entry.data[CONF_HOST]
             snap["ssl"] = bool(self.config_entry.data.get(CONF_SSL))

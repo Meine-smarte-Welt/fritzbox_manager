@@ -1,4 +1,4 @@
-// SHA256 (Inhalt ab Zeile 2, d.h. dieser Datei ohne diese erste Zeile): eaf83dc4f00f97605dd10f8348285168b6afb3ce36a3379a6393e1d3b2c4b270
+// SHA256 (Inhalt ab Zeile 2, d.h. dieser Datei ohne diese erste Zeile): 46c698da25d3c9d195cb2c76526fcf11b7157a67ce005a48bdd9efa8f0db8057
 /**
  * FRITZ!Box Manager Card
  *
@@ -10,7 +10,7 @@
  * Aufbau nach dem Design-Master von "Meine smarte Welt".
  */
 
-const CARD_VERSION = "0.0.1b0";
+const CARD_VERSION = "0.0.2b1";
 const DOMAIN = "fritzbox_manager";
 const WS_SUBSCRIBE = "fritzbox_manager/subscribe";
 const WS_ACTION = "fritzbox_manager/action";
@@ -28,6 +28,14 @@ const TAB_META = {
   settings: { icon: "mdi:cog", label: "tab_settings" },
 };
 const CATEGORY_ICON_COLOR_KEYS = Object.fromEntries(TAB_ORDER.map((k) => [k, `color_icon_${k}`]));
+
+// --- Experimentelle Funktionen (ungeprüft, standardmäßig ausgeblendet) -----------
+// Registry schlüsselgleich zu EXPERIMENTAL_FEATURES in const.py. Solange show_experimental
+// aus ist, erscheint von diesen Funktionen nichts in der Karte. "option" ist der eigene
+// Schalter (Standard aus) in den Optionen der Integration.
+const EXPERIMENTAL = {
+  backup: { since: "0.0.2b1", icon: "mdi:backup-restore", option: "backup_enabled", label: "x_backup" },
+};
 
 // --- Module: die Schwester-Integrationen, die als Popup eingebunden werden -------
 // detect() sucht die Entitäten über die Entitätsregistrierung (Plattform +
@@ -91,6 +99,7 @@ const CONFIG_DEFAULTS = {
   show_wifi: true,
   show_modules: true,
   show_settings: true,
+  show_experimental: false,
   default_tab: "overview",
   max_rows: 20,
   zoom: 1,
@@ -142,6 +151,22 @@ const I18N = {
     mod_missing_text: "Die Karte „{name}“ ist in diesem Browser nicht geladen. Installiere die Integration über HACS und lade die Seite neu (Strg+F5).",
     mod_noentity_text: "Die Sensoren von „{name}“ wurden nicht automatisch gefunden. Trage sie in der Karten-Konfiguration unter „{key}“ ein.",
     mod_error_text: "Die Karte „{name}“ konnte nicht angezeigt werden.",
+    a_experimental: "Experimentell", x_badge: "Experimentell",
+    x_intro: "Diese Funktionen sind ungeprüft und können fehlschlagen. Vorhanden: {n}.",
+    x_master: "Experimentelle Funktionen zulassen", x_master_hint: "Hauptschalter. Solange er aus ist, tut die Integration dafür nichts: keine Aktionen, keine Ereignisse.",
+    x_master_off: "Schalte den Hauptschalter ein, dann erscheinen die experimentellen Funktionen.",
+    x_backup: "Backup der Einstellungen",
+    bk_enable: "Backup aktivieren", bk_enable_hint: "Standardmäßig aus.",
+    bk_intro: "Holt die Einstellungen der FRITZ!Box als verschlüsselte Datei und speichert sie im Konfigurationsordner von Home Assistant (Ordner „{folder}“). Ungeprüft: noch nicht an einer echten FRITZ!Box bestätigt.",
+    bk_password: "Backup-Kennwort", bk_password_hint: "Schützt die Datei und wird nicht gespeichert. Ohne dieses Kennwort lässt sich das Backup nicht in die FRITZ!Box einspielen.",
+    bk_create: "Backup jetzt erstellen", bk_need_pw: "Bitte ein Kennwort für das Backup eingeben.", bk_running: "Backup läuft …", bk_done: "Backup gespeichert",
+    bk_keep: "Backups aufbewahren (Anzahl)", bk_keep_hint: "Ältere Backups werden nach dem nächsten Backup gelöscht.",
+    bk_list: "Gespeicherte Backups", bk_empty: "Noch kein Backup gespeichert.", bk_more: "{n} weitere nicht angezeigt",
+    bk_restore_hint: "Einspielen: Oberfläche der FRITZ!Box, System, Sicherung.",
+    ev_backup_created: "Backup gespeichert: {file}",
+    c_errors: "Abschnitte mit Fehlern",
+    w_empty_reason: "Die FRITZ!Box hat die WLAN-Abfrage abgelehnt ({reason}). Prüfe, ob der Benutzer das Recht „FRITZ!Box Einstellungen“ hat.",
+    dsl_inactive: "Keine DSL-Leitung aktiv (Status: {status}). Werte gibt es nur bei bestehender Leitung.",
     b_close: "Schließen", b_copy: "Kopieren", b_copied: "Kopiert", na: "—", unit_d: "d", unit_h: "h", unit_min: "min",
     banner_error: "Fehler", more_info: "Mehr Info",
   },
@@ -180,6 +205,22 @@ const I18N = {
     mod_missing_text: "The card \"{name}\" is not loaded in this browser. Install the integration via HACS and reload the page (Ctrl+F5).",
     mod_noentity_text: "The sensors of \"{name}\" were not found automatically. Enter them in the card configuration under \"{key}\".",
     mod_error_text: "The card \"{name}\" could not be displayed.",
+    a_experimental: "Experimental", x_badge: "Experimental",
+    x_intro: "These features are unverified and may fail. Available: {n}.",
+    x_master: "Allow experimental features", x_master_hint: "Master switch. While it is off, the integration does nothing for them: no actions, no events.",
+    x_master_off: "Turn the master switch on and the experimental features appear.",
+    x_backup: "Settings backup",
+    bk_enable: "Enable backup", bk_enable_hint: "Off by default.",
+    bk_intro: "Fetches the FRITZ!Box settings as an encrypted file and stores it in the Home Assistant configuration folder (folder \"{folder}\"). Unverified: not yet confirmed on a real FRITZ!Box.",
+    bk_password: "Backup password", bk_password_hint: "Protects the file and is not stored. Without this password the backup cannot be restored to the FRITZ!Box.",
+    bk_create: "Create backup now", bk_need_pw: "Please enter a password for the backup.", bk_running: "Backup running …", bk_done: "Backup saved",
+    bk_keep: "Backups to keep (number)", bk_keep_hint: "Older backups are deleted after the next backup.",
+    bk_list: "Saved backups", bk_empty: "No backup saved yet.", bk_more: "{n} more not shown",
+    bk_restore_hint: "Restore: FRITZ!Box interface, System, Backup.",
+    ev_backup_created: "Backup saved: {file}",
+    c_errors: "Sections with errors",
+    w_empty_reason: "The FRITZ!Box rejected the Wi-Fi query ({reason}). Check that the user has the \"FRITZ!Box settings\" right.",
+    dsl_inactive: "No DSL line active (status: {status}). Values only exist while the line is up.",
     b_close: "Close", b_copy: "Copy", b_copied: "Copied", na: "—", unit_d: "d", unit_h: "h", unit_min: "min",
     banner_error: "Error", more_info: "More info",
   },
@@ -218,6 +259,22 @@ const I18N = {
     mod_missing_text: "De kaart \"{name}\" is in deze browser niet geladen. Installeer de integratie via HACS en laad de pagina opnieuw (Ctrl+F5).",
     mod_noentity_text: "De sensoren van \"{name}\" zijn niet automatisch gevonden. Vul ze in bij de kaartconfiguratie onder \"{key}\".",
     mod_error_text: "De kaart \"{name}\" kon niet worden weergegeven.",
+    a_experimental: "Experimenteel", x_badge: "Experimenteel",
+    x_intro: "Deze functies zijn niet getest en kunnen mislukken. Beschikbaar: {n}.",
+    x_master: "Experimentele functies toestaan", x_master_hint: "Hoofdschakelaar. Zolang die uit staat, doet de integratie hiervoor niets: geen acties, geen gebeurtenissen.",
+    x_master_off: "Zet de hoofdschakelaar aan, dan verschijnen de experimentele functies.",
+    x_backup: "Back-up van instellingen",
+    bk_enable: "Back-up inschakelen", bk_enable_hint: "Standaard uit.",
+    bk_intro: "Haalt de instellingen van de FRITZ!Box op als versleuteld bestand en slaat die op in de configuratiemap van Home Assistant (map \"{folder}\"). Ongetest: nog niet bevestigd op een echte FRITZ!Box.",
+    bk_password: "Back-upwachtwoord", bk_password_hint: "Beschermt het bestand en wordt niet opgeslagen. Zonder dit wachtwoord kan de back-up niet in de FRITZ!Box worden teruggezet.",
+    bk_create: "Nu back-up maken", bk_need_pw: "Voer een wachtwoord voor de back-up in.", bk_running: "Back-up bezig …", bk_done: "Back-up opgeslagen",
+    bk_keep: "Te bewaren back-ups (aantal)", bk_keep_hint: "Oudere back-ups worden na de volgende back-up verwijderd.",
+    bk_list: "Opgeslagen back-ups", bk_empty: "Nog geen back-up opgeslagen.", bk_more: "{n} meer niet getoond",
+    bk_restore_hint: "Terugzetten: interface van de FRITZ!Box, Systeem, Back-up.",
+    ev_backup_created: "Back-up opgeslagen: {file}",
+    c_errors: "Onderdelen met fouten",
+    w_empty_reason: "De FRITZ!Box heeft de wifi-opvraging geweigerd ({reason}). Controleer of de gebruiker het recht \"FRITZ!Box-instellingen\" heeft.",
+    dsl_inactive: "Geen DSL-lijn actief (status: {status}). Waarden zijn er alleen bij een bestaande lijn.",
     b_close: "Sluiten", b_copy: "Kopiëren", b_copied: "Gekopieerd", na: "—", unit_d: "d", unit_h: "u", unit_min: "min",
     banner_error: "Fout", more_info: "Meer info",
   },
@@ -491,6 +548,18 @@ a.link:hover { text-decoration: underline; }
 .helpbox { padding: 16px; }
 .code { font-family: var(--code-font-family, monospace); font-size: .8rem; background: color-mix(in srgb, var(--primary-text-color) 7%, transparent); padding: 8px 10px; border-radius: 6px; white-space: pre-wrap; margin: 8px 0; }
 
+/* Experimentell */
+.acc.exp { border-color: var(--fbm-color-warning, var(--warning-color, #ff9800)); }
+.acc.exp > summary ha-icon { color: var(--fbm-color-warning, var(--warning-color, #ff9800)); }
+.pill.exp { --c: var(--fbm-color-warning, var(--warning-color, #ff9800)); }
+.field.stack { flex-direction: column; align-items: stretch; gap: 6px; }
+.field.stack input[type=password] { flex: none; width: 100%; box-sizing: border-box; }
+.field input[type=password] { flex: 1 1 140px; min-width: 0; padding: 6px 8px; border-radius: 6px; border: 1px solid var(--divider-color); background: var(--card-background-color, transparent); color: var(--primary-text-color); font: inherit; }
+.bk { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; padding: 5px 0; font-size: .88rem; border-bottom: 1px dashed color-mix(in srgb, var(--divider-color) 70%, transparent); }
+.bk:last-child { border-bottom: 0; }
+.bk .n { overflow-wrap: anywhere; }
+.bk .m { flex: none; color: var(--secondary-text-color); white-space: nowrap; }
+
 /* Toast */
 .toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 60; max-width: 90vw; padding: 10px 16px; border-radius: 8px; background: var(--primary-text-color, #222); color: var(--card-background-color, #fff); font-size: .9rem; box-shadow: 0 4px 16px rgba(0,0,0,.35); }
 .toast.error { background: var(--fbm-color-error, var(--error-color, #db4437)); color: #fff; }
@@ -502,6 +571,7 @@ const EVENT_SEVERITY = {
   internet_online: "success", connection_restored: "success",
   ip_changed: "info", firmware_update: "info", wlan_changed: "info", option_changed: "info",
   reboot_requested: "warning", reconnect_requested: "warning",
+  backup_created: "success",
 };
 const TOAST_MS = 5000;
 const CONFIRM_MS = 5000;
@@ -541,6 +611,7 @@ class FritzboxManagerCard extends HTMLElement {
     this._sig = "";
     this._popupSig = "";
     this._toastTimer = null;
+    this._bkPw = ""; // Backup-Kennwort: nur im Speicher dieser Karte, nie gespeichert
     this._onKey = (e) => {
       if (e.key === "Escape" && this._popup) this._closePopup();
     };
@@ -550,6 +621,10 @@ class FritzboxManagerCard extends HTMLElement {
     root.addEventListener("click", (e) => this._onClick(e));
     root.addEventListener("keydown", (e) => this._onKeydown(e));
     root.addEventListener("change", (e) => this._onChange(e));
+    root.addEventListener("input", (e) => {
+      const el = e.target;
+      if (el && el.dataset && el.dataset.bkpw !== undefined) this._bkPw = String(el.value || "");
+    });
     // "toggle" bubbelt nicht - deshalb in der Capture-Phase. Kein Neuzeichnen hier (Endlosschleife).
     root.addEventListener(
       "toggle",
@@ -708,7 +783,8 @@ class FritzboxManagerCard extends HTMLElement {
       this._busy.delete(ev.topic);
       if (ev.status === "ok") {
         const quiet = ev.topic === "check_update";
-        if (!quiet) this._showToast(this._t(ev.topic === "reboot" || ev.topic === "reconnect" ? "m_sent" : "o_saved"));
+        const doneKey = ev.topic === "reboot" || ev.topic === "reconnect" ? "m_sent" : ev.topic === "create_backup" ? "bk_done" : "o_saved";
+        if (!quiet) this._showToast(this._t(doneKey));
       } else {
         this._showToast(ev.error || this._t("banner_error"), true);
       }
@@ -807,6 +883,9 @@ class FritzboxManagerCard extends HTMLElement {
       case "clear_events":
         if (this._canEdit()) this._act({ action: "clear_events" });
         break;
+      case "create_backup":
+        this._createBackup();
+        break;
       case "copy":
         this._copy(el.dataset.text || "");
         break;
@@ -817,6 +896,11 @@ class FritzboxManagerCard extends HTMLElement {
 
   _onKeydown(e) {
     if (this._fromModule(e)) return;
+    if (e.key === "Enter" && e.target && e.target.dataset && e.target.dataset.bkpw !== undefined) {
+      e.preventDefault();
+      this._createBackup();
+      return;
+    }
     if (e.key !== "Enter" && e.key !== " ") return;
     const el = e.target.closest ? e.target.closest(".row[data-act]") : null;
     if (el && e.target === el) {
@@ -833,9 +917,27 @@ class FritzboxManagerCard extends HTMLElement {
       const value = Math.round(Number(el.value));
       if (Number.isFinite(value) && value >= 10 && value <= 600) this._act({ action: "set_option", option: "scan_interval", value });
       else this._showToast(this._t("banner_error"), true);
-    } else if (el.dataset.opt === "events_enabled" || el.dataset.opt === "cpu_temperature") {
+    } else if (el.dataset.opt === "backup_keep") {
+      const value = Math.round(Number(el.value));
+      if (Number.isFinite(value) && value >= 1 && value <= 50) this._act({ action: "set_option", option: "backup_keep", value });
+      else this._showToast(this._t("banner_error"), true);
+    } else if (["events_enabled", "cpu_temperature", "experimental_enabled", "backup_enabled"].includes(el.dataset.opt)) {
       this._act({ action: "set_option", option: el.dataset.opt, value: !!el.checked });
     }
+  }
+
+  /** Backup anstoßen. Das Kennwort geht nur an die Integration und wird danach aus der Karte entfernt. */
+  _createBackup() {
+    if (!this._canEdit() || this._busy.has("create_backup")) return;
+    const password = this._bkPw || "";
+    if (!password) {
+      this._showToast(this._t("bk_need_pw"), true);
+      return;
+    }
+    this._bkPw = "";
+    const input = this.shadowRoot.querySelector("[data-bkpw]");
+    if (input) input.value = "";
+    this._act({ action: "create_backup", password });
   }
 
   async _copy(text) {
@@ -865,6 +967,8 @@ class FritzboxManagerCard extends HTMLElement {
     const fk = active && active.dataset ? active.dataset.fk : null;
     main.style.zoom = Number(this._config.zoom) > 0 ? String(this._config.zoom) : "1";
     main.innerHTML = this._html();
+    const pwInput = main.querySelector("[data-bkpw]");
+    if (pwInput && this._bkPw) pwInput.value = this._bkPw;
     if (fk) {
       const el = main.querySelector(`[data-fk="${fk}"]`);
       if (el) el.focus();
@@ -905,6 +1009,7 @@ class FritzboxManagerCard extends HTMLElement {
     const snap = this._snap;
     const app = snap.app || {};
     let h = "";
+    if ((snap.jobs || []).includes("backup")) h += `<div class="banner live"><ha-icon icon="mdi:backup-restore"></ha-icon><div class="grow">${esc(t("bk_running"))}</div></div>`;
     if (snap.reboot_pending) h += `<div class="banner live"><ha-icon icon="mdi:restart"></ha-icon><div class="grow">${esc(t("reboot_running"))}</div></div>`;
     else if (!snap.connected) h += `<div class="banner error"><ha-icon icon="mdi:lan-disconnect"></ha-icon><div class="grow">${esc(t("conn_lost"))}</div></div>`;
     if (this._mismatch()) h += `<div class="banner warning"><ha-icon icon="mdi:alert"></ha-icon><div class="grow">${esc(t("card_mismatch", { card: CARD_VERSION, integration: app.version }))}</div></div>`;
@@ -1077,7 +1182,8 @@ class FritzboxManagerCard extends HTMLElement {
         this._tile(
           "t_dsl",
           "mdi:sine-wave",
-          `<div class="kv"><span>${esc(t("l_noise_down"))}</span><span>${esc(dB(dsl.noise_margin_down))}</span></div>` +
+          (this._dslInactive(dsl) ? `<div class="sub" style="white-space:normal">${esc(t("dsl_inactive", { status: dsl.status || na }))}</div>` : "") +
+            `<div class="kv"><span>${esc(t("l_noise_down"))}</span><span>${esc(dB(dsl.noise_margin_down))}</span></div>` +
             `<div class="kv"><span>${esc(t("l_noise_up"))}</span><span>${esc(dB(dsl.noise_margin_up))}</span></div>` +
             `<div class="kv"><span>${esc(t("l_atten_down"))}</span><span>${esc(dB(dsl.attenuation_down))}</span></div>` +
             `<div class="kv"><span>${esc(t("l_atten_up"))}</span><span>${esc(dB(dsl.attenuation_up))}</span></div>`
@@ -1155,6 +1261,7 @@ class FritzboxManagerCard extends HTMLElement {
     if (dsl) {
       const dB = (v) => (v === null || v === undefined ? na : `${numFmt(lang, v, 1)} dB`);
       const body =
+        (this._dslInactive(dsl) ? `<p class="hint">${esc(t("dsl_inactive", { status: dsl.status || na }))}</p>` : "") +
         this._line(t("l_status"), this._val(dsl.status)) +
         this._line(t("l_noise_down"), esc(dB(dsl.noise_margin_down))) +
         this._line(t("l_noise_up"), esc(dB(dsl.noise_margin_up))) +
@@ -1163,6 +1270,11 @@ class FritzboxManagerCard extends HTMLElement {
       h += this._acc("dsl", "mdi:sine-wave", t("a_dsl"), body);
     }
     return h;
+  }
+
+  /** Keine DSL-Leitung aktiv (z. B. Kabel, Glasfaser oder hinter einem anderen Router). */
+  _dslInactive(dsl) {
+    return !!dsl && String(dsl.status || "").toLowerCase() !== "up";
   }
 
   // --- WLAN ---
@@ -1181,7 +1293,10 @@ class FritzboxManagerCard extends HTMLElement {
   _wifiHtml() {
     const t = (k, p) => this._t(k, p);
     const nets = this._networks();
-    if (!nets.length) return `<div class="empty">${esc(t("w_empty"))}</div>`;
+    if (!nets.length) {
+      const reason = (this._data().errors || {}).wlan;
+      return `<div class="empty">${esc(reason ? t("w_empty_reason", { reason }) : t("w_empty"))}</div>`;
+    }
     const canEdit = this._canEdit();
     const rows = nets.map((n) => {
       const icon = n.guest ? "mdi:wifi-star" : n.enabled ? "mdi:wifi" : "mdi:wifi-off";
@@ -1360,6 +1475,64 @@ class FritzboxManagerCard extends HTMLElement {
     return this._t(key, { version: p.version, wlan: p.wlan, option: p.option });
   }
 
+  /** Gruppe "Experimentell": Hauptschalter und je Funktion ein eigener Schalter (Standard aus). */
+  _experimentalHtml(canEdit, opts) {
+    const t = (k, p) => this._t(k, p);
+    const count = Object.keys(EXPERIMENTAL).length;
+    if (!count) return "";
+    const master = !!opts.experimental_enabled;
+    let body = `<p class="hint warn">${esc(t("x_intro", { n: count }))}</p>`;
+    if (canEdit) {
+      body += `<div class="field"><label for="o-xmaster">${esc(t("x_master"))}<div class="hint">${esc(t("x_master_hint"))}</div></label><input id="o-xmaster" type="checkbox" data-opt="experimental_enabled" data-fk="xmaster"${master ? " checked" : ""}></div>`;
+    } else {
+      body += this._line(t("x_master"), esc(t(master ? "c_yes" : "c_no"))) + `<p class="hint">${esc(t(this._config.read_only ? "o_readonly" : "o_admin"))}</p>`;
+    }
+    if (!master) body += `<p class="hint">${esc(t("x_master_off"))}</p>`;
+    let h = this._acc("experimental", "mdi:flask-outline", t("a_experimental"), body, { variant: "exp", open: !master, meta: this._pill("exp", String(count)) });
+    if (master) h += this._backupHtml(canEdit, opts);
+    return h;
+  }
+
+  /** Backup der Box-Einstellungen (experimentell). */
+  _backupHtml(canEdit, opts) {
+    const t = (k, p) => this._t(k, p);
+    const lang = this._lang();
+    const na = t("na");
+    const on = !!opts.backup_enabled;
+    const meta = EXPERIMENTAL.backup;
+    let body = "";
+    if (canEdit) {
+      body += `<div class="field"><label for="o-bk">${esc(t("bk_enable"))}<div class="hint">${esc(t("bk_enable_hint"))}</div></label><input id="o-bk" type="checkbox" data-opt="backup_enabled" data-fk="bk"${on ? " checked" : ""}></div>`;
+    } else {
+      body += this._line(t("bk_enable"), esc(t(on ? "c_yes" : "c_no"))) + `<p class="hint">${esc(t(this._config.read_only ? "o_readonly" : "o_admin"))}</p>`;
+    }
+    const backups = this._snap.backups;
+    if (on && backups) {
+      body += `<p class="hint">${esc(t("bk_intro", { folder: backups.folder }))}</p>`;
+      const busy = this._busy.has("create_backup") || (this._snap.jobs || []).includes("backup");
+      if (canEdit) {
+        body += `<div class="field stack"><label for="o-bkpw">${esc(t("bk_password"))}<div class="hint">${esc(t("bk_password_hint"))}</div></label><input id="o-bkpw" type="password" maxlength="128" autocomplete="new-password" data-bkpw data-fk="bkpw"></div>`;
+        body += `<div class="actions"><button class="btn primary" data-act="create_backup"${busy ? " disabled" : ""}><ha-icon icon="mdi:backup-restore"></ha-icon>${esc(t(busy ? "bk_running" : "bk_create"))}</button></div>`;
+        body += `<div class="field"><label for="o-bkkeep">${esc(t("bk_keep"))}<div class="hint">${esc(t("bk_keep_hint"))}</div></label><input id="o-bkkeep" type="number" min="1" max="50" step="1" value="${esc(opts.backup_keep)}" data-opt="backup_keep" data-fk="bkkeep"></div>`;
+      } else {
+        body += this._line(t("bk_keep"), this._val(opts.backup_keep));
+      }
+      const files = backups.files || [];
+      let list;
+      if (!files.length) list = `<div class="empty">${esc(t("bk_empty"))}</div>`;
+      else {
+        const max = Math.max(1, Number(this._config.max_rows) || 20);
+        list = files
+          .slice(0, max)
+          .map((f) => `<div class="bk"><span class="n">${esc(f.name)}</span><span class="m" title="${esc(fmtDateTime(lang, f.modified, na))}">${esc(fmtBytes(lang, f.size, na))} · ${esc(fmtRelative(lang, f.modified, na))}</span></div>`)
+          .join("");
+        if (files.length > max) list += `<p class="hint">${esc(t("bk_more", { n: files.length - max }))}</p>`;
+      }
+      body += `<h4 style="margin:12px 0 4px;font-size:.9rem">${esc(t("bk_list"))}</h4>${list}<p class="hint">${esc(t("bk_restore_hint"))}</p>`;
+    }
+    return this._acc("exp_backup", meta.icon, t(meta.label), body, { variant: "exp", open: true, meta: this._pill("exp", t("x_badge")) });
+  }
+
   _settingsHtml() {
     const t = (k, p) => this._t(k, p);
     const lang = this._lang();
@@ -1395,8 +1568,8 @@ class FritzboxManagerCard extends HTMLElement {
     if (snap.host) conn += this._line(t("c_secure"), esc(t(snap.ssl ? "c_yes" : "c_no")));
     conn += this._line(t("c_updated"), esc(fmtRelative(lang, this._data().fetched_at, na)));
     conn += this._line(t("c_interval"), esc(`${(snap.options || {}).scan_interval || na} s`));
-    const errs = Object.keys(this._data().errors || {});
-    if (errs.length) conn += this._line("!", this._pill("warning", errs.join(", ")));
+    const errs = Object.entries(this._data().errors || {});
+    if (errs.length) conn += this._line(t("c_errors"), errs.map(([k, v]) => this._pill("warning", `${k}: ${v}`)).join(" "));
     h += this._acc("box_conn", "mdi:lan-connect", t("a_box_conn"), conn, { open: true });
 
     // 3. Optionen
@@ -1429,6 +1602,9 @@ class FritzboxManagerCard extends HTMLElement {
     }
     h += this._acc("maintenance", "mdi:wrench", t("a_maintenance"), maint, { variant: "danger" });
 
+    // 4b. Experimentell (nur wenn show_experimental in der Karte an ist)
+    if (this._config.show_experimental === true) h += this._experimentalHtml(canEdit, opts);
+
     // 5. Ereignisse seit dem Start
     const events = snap.events || [];
     const max = Math.max(1, Number(this._config.max_rows) || 20);
@@ -1449,6 +1625,7 @@ class FritzboxManagerCard extends HTMLElement {
 
 // --- Karten-Editor --------------------------------------------------------------
 const EDITOR_LABELS = {
+  show_experimental: "Experimentelle Funktionen anzeigen (ungeprüft)",
   title: "Titel (leer = keine Überschrift)",
   show_title: "Titel anzeigen",
   entry_id: "Eintrags-ID (nur bei mehreren FRITZ!Boxen)",
@@ -1469,6 +1646,9 @@ const EDITOR_LABELS = {
   module_calls_config: "Anrufe: Karten-Konfiguration überschreiben (optional)",
   module_network_config: "Netzwerk: Karten-Konfiguration überschreiben (optional)",
   module_events_config: "Ereignisse: Karten-Konfiguration überschreiben (optional)",
+};
+const EDITOR_HELPERS = {
+  show_experimental: "Blendet ungeprüfte Funktionen in den Einstellungen ein (aktuell: Backup der Einstellungen). Zusätzlich muss in den Optionen der Integration der Hauptschalter eingeschaltet werden.",
 };
 const EDITOR_COLOR_LABELS = {
   tab_active: "Aktiver Tab", success: "Erfolg (grün)", warning: "Warnung (orange)", error: "Fehler (rot)", info: "Info (blau)",
@@ -1580,6 +1760,13 @@ class FritzboxManagerCardEditor extends HTMLElement {
         type: "expandable", name: "", title: "Bearbeiten", icon: "mdi:pencil-lock", flatten: true,
         schema: [{ name: "read_only", selector: { boolean: {} } }],
       },
+      // Experimentell: am Ende der Gruppen, nur wenn es experimentelle Funktionen gibt.
+      ...(Object.keys(EXPERIMENTAL).length
+        ? [{
+            type: "expandable", name: "", title: `Experimentell (${Object.keys(EXPERIMENTAL).length})`, icon: "mdi:flask-outline", flatten: true,
+            schema: [{ name: "show_experimental", selector: { boolean: {} } }],
+          }]
+        : []),
     ];
   }
 
@@ -1600,6 +1787,7 @@ class FritzboxManagerCardEditor extends HTMLElement {
       </style><div id="info"></div><ha-form id="form"></ha-form><details id="colors"><summary>Farben</summary><div class="colors" id="colorbody"></div></details>`;
       this._form = this.shadowRoot.getElementById("form");
       this._form.computeLabel = (schema) => EDITOR_LABELS[schema.name] || schema.name;
+      this._form.computeHelper = (schema) => EDITOR_HELPERS[schema.name] || "";
       this._form.addEventListener("value-changed", (ev) => this._onForm(ev));
       this.shadowRoot.getElementById("colorbody").addEventListener("input", (ev) => this._onColor(ev));
       this.shadowRoot.getElementById("colorbody").addEventListener("click", (ev) => {

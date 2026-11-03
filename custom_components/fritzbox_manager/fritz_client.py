@@ -1,4 +1,4 @@
-# SHA256 (Inhalt ab Zeile 2, d.h. dieser Datei ohne diese erste Zeile): b764db2ca63ab7a8d8ebb9ee44ffe85810ec3b3b7e58bc11ef8b5ca7ced61b67
+# SHA256 (Inhalt ab Zeile 2, d.h. dieser Datei ohne diese erste Zeile): 0301bc3d67cfb76bb3fe6232ca79ae9cefba2808e050c2e844e05513e30690a2
 """Blockierender TR-064-Zugriff auf die FRITZ!Box (fritzconnection).
 
 Alle Methoden blockieren und müssen aus dem Executor aufgerufen werden.
@@ -15,11 +15,15 @@ from __future__ import annotations
 import logging
 import threading
 from typing import Any, Callable
+from urllib.parse import urlsplit, urlunsplit
 
 from fritzconnection import FritzConnection
 from fritzconnection.core.exceptions import (
     FritzActionError,
+    FritzArgumentCharacterError,
     FritzArgumentError,
+    FritzArgumentStringToLongError,
+    FritzArgumentStringToShortError,
     FritzArrayIndexError,
     FritzAuthorizationError,
     FritzConnectionException,
@@ -30,7 +34,7 @@ from fritzconnection.core.exceptions import (
 )
 from requests.exceptions import RequestException
 
-from .const import REQUEST_TIMEOUT
+from .const import BACKUP_MAX_BYTES, REQUEST_TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -62,6 +66,18 @@ class FritzInvalidAuth(FritzClientError):
 
 class FritzActionFailed(FritzClientError):
     """Die Box hat eine Aktion abgelehnt oder nicht ausgeführt."""
+
+
+class FritzBackupError(FritzActionFailed):
+    """Das Backup der Einstellungen ist fehlgeschlagen. ``reason`` nennt den Grund (Kurzschlüssel)."""
+
+    def __init__(self, reason: str) -> None:
+        super().__init__(reason)
+        self.reason = reason
+
+
+class _SectionFailed(Exception):
+    """Ein Abschnitt lieferte nichts, obwohl die Box den Dienst anbietet (Grund in ``str(ex)``)."""
 
 
 def _int(value: Any) -> int | None:
@@ -205,6 +221,10 @@ class FritzClient:
         except FritzAuthorizationError as ex:
             self._fc = None
             raise FritzInvalidAuth(str(ex)) from ex
+        except _SectionFailed as ex:
+            errors[name] = str(ex)
+            _LOGGER.debug("Abschnitt %s lieferte nichts: %s", name, ex)
+            return None
         except _UNSUPPORTED as ex:
             _LOGGER.debug("Abschnitt %s wird von dieser Box nicht unterstützt: %s", name, ex)
             return None
@@ -335,30 +355,41 @@ class FritzClient:
         if not self._has_service("WANDSLInterfaceConfig1"):
             return None
         info = self._call("WANDSLInterfaceConfig1", "GetInfo")
+        status = _text(info.get("NewStatus"))
+        # Der Dienst existiert auch bei Boxen ohne DSL-Leitung (Kabel, Glasfaser, hinter
+        # einem anderen Router) und liefert dann lauter Nullen. Echte Werte gibt es nur,
+        # wenn die Leitung steht; sonst bleiben sie leer, damit keine 0 angezeigt wird.
+        up = (status or "").lower() == "up"
 
         def tenth(key: str) -> float | None:
             value = _float(info.get(key))
-            return round(value / 10, 1) if value is not None else None
+            return round(value / 10, 1) if value is not None and up else None
+
+        def rate(key: str) -> int | None:
+            value = _int(info.get(key))
+            return value * 1000 if value and up else None
 
         return {
-            "status": _text(info.get("NewStatus")),
+            "status": status,
             "noise_margin_down": tenth("NewDownstreamNoiseMargin"),
             "noise_margin_up": tenth("NewUpstreamNoiseMargin"),
             "attenuation_down": tenth("NewDownstreamAttenuation"),
             "attenuation_up": tenth("NewUpstreamAttenuation"),
-            "rate_down": (_int(info.get("NewDownstreamCurrRate")) or 0) * 1000 or None,
-            "rate_up": (_int(info.get("NewUpstreamCurrRate")) or 0) * 1000 or None,
+            "rate_down": rate("NewDownstreamCurrRate"),
+            "rate_up": rate("NewUpstreamCurrRate"),
         }
 
     def _read_wlan(self) -> dict[str, Any]:
         raw: list[dict[str, Any]] = []
+        first_error: Exception | None = None
         for index in range(1, MAX_WLAN_NETWORKS + 1):
             service = f"WLANConfiguration{index}"
             if not self._has_service(service):
                 break
             try:
                 info = self._call(service, "GetInfo")
-            except _UNSUPPORTED + _REFUSED:
+            except _UNSUPPORTED + _REFUSED as ex:
+                first_error = first_error or ex
                 continue
             clients: int | None = None
             try:
@@ -386,6 +417,10 @@ class FritzClient:
                     "_ap_type": _text(ext.get("NewX_AVM-DE_APType")),
                 }
             )
+        if not raw and first_error is not None:
+            # Die Box bietet WLAN-Dienste an, hat aber jede Abfrage abgelehnt (meist fehlt dem
+            # Benutzer das Recht "FRITZ!Box Einstellungen"). Das wird gemeldet statt verschwiegen.
+            raise _SectionFailed(type(first_error).__name__)
         # Gastnetz: bevorzugt die Angabe der Box; sonst - wie in fritzconnection -
         # bei mindestens drei Netzen das mit der höchsten Nummer (Heuristik).
         for position, network in enumerate(raw):
@@ -422,6 +457,90 @@ class FritzClient:
     def reconnect(self) -> None:
         """Internetverbindung trennen und neu aufbauen (neue IP-Adresse)."""
         self._action(self._wan_service(), "ForceTermination")
+
+    def export_config(self, password: str, max_bytes: int = BACKUP_MAX_BYTES) -> bytes:
+        """Einstellungen der Box (mit ``password`` verschlüsselt) per TR-064 holen. EXPERIMENTELL.
+
+        Ablauf nach der Beschreibung von AVM (DeviceConfig, ``X_AVM-DE_GetConfigFile``): Die Box
+        liefert eine kurzlebige Download-Adresse (HTTPS, unter 30 Sekunden gültig, Digest-
+        Anmeldung mit dem TR-064-Benutzer). Das Kennwort schützt die Datei; es wird nicht
+        gespeichert und nicht protokolliert.
+        """
+        with self._lock:
+            if self._fc is None:
+                self._connect_locked()
+            fc = self._fc
+            assert fc is not None
+            try:
+                result = self._call(
+                    "DeviceConfig1", "X_AVM-DE_GetConfigFile", **{"NewX_AVM-DE_Password": password}
+                )
+                url = _text(result.get("NewX_AVM-DE_ConfigFileUrl"))
+                if not url:
+                    raise FritzBackupError("no_url")
+                return self._download(fc, url, max_bytes)
+            except FritzBackupError:
+                raise
+            except FritzAuthorizationError as ex:
+                self._fc = None
+                raise FritzInvalidAuth(str(ex)) from ex
+            except FritzArgumentStringToShortError as ex:
+                raise FritzBackupError("password_short") from ex
+            except FritzArgumentStringToLongError as ex:
+                raise FritzBackupError("password_long") from ex
+            except FritzArgumentCharacterError as ex:
+                raise FritzBackupError("password_chars") from ex
+            except FritzArgumentError as ex:
+                raise FritzBackupError("password_invalid") from ex
+            except FritzSecurityError as ex:
+                raise FritzBackupError("no_permission") from ex
+            except (FritzServiceError, FritzActionError, FritzLookUpError) as ex:
+                raise FritzBackupError("unsupported") from ex
+            except FritzInternalError as ex:
+                raise FritzBackupError("refused") from ex
+            except (RequestException, OSError) as ex:
+                self._fc = None
+                raise FritzCannotConnect(type(ex).__name__) from ex
+            except FritzConnectionException as ex:
+                raise FritzBackupError("refused") from ex
+
+    def _download(self, fc: FritzConnection, url: str, max_bytes: int) -> bytes:
+        """Download-Adresse der Box abrufen (nur bei der eingerichteten Box, ohne Weiterleitungen)."""
+        try:
+            parts = urlsplit(url)
+            port = parts.port
+        except ValueError as ex:
+            raise FritzBackupError("bad_url") from ex
+        if parts.scheme not in ("http", "https") or not parts.hostname:
+            raise FritzBackupError("bad_url")
+        # Es wird nur mit der eingerichteten Adresse gesprochen: der Rechnername aus der
+        # Antwort der Box wird durch den eigenen ersetzt (kein Abruf fremder Ziele).
+        host = self._host
+        host_part = f"[{host}]" if ":" in host and not host.startswith("[") else host
+        netloc = f"{host_part}:{port}" if port else host_part
+        target = urlunsplit((parts.scheme, netloc, parts.path, parts.query, ""))
+        chunks: list[bytes] = []
+        total = 0
+        with fc.session.get(
+            target,
+            timeout=(REQUEST_TIMEOUT, 30),
+            stream=True,
+            verify=False,
+            allow_redirects=False,
+        ) as response:
+            if response.status_code != 200:
+                raise FritzBackupError("http_error")
+            if "html" in (response.headers.get("Content-Type") or "").lower():
+                raise FritzBackupError("unexpected_content")
+            for chunk in response.iter_content(65536):
+                total += len(chunk)
+                if total > max_bytes:
+                    raise FritzBackupError("too_large")
+                chunks.append(chunk)
+        data = b"".join(chunks)
+        if len(data) < 16:
+            raise FritzBackupError("empty")
+        return data
 
     def _action(self, service: str, action: str, **arguments: Any) -> None:
         with self._lock:

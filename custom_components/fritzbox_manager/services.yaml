@@ -1,4 +1,4 @@
-# SHA256 (Inhalt ab Zeile 2, d.h. dieser Datei ohne diese erste Zeile): 3f6f5da01cb13c75d6b3bb65778e92dc04a9b1b0706d5becd029bc49f30e68e9
+# SHA256 (Inhalt ab Zeile 2, d.h. dieser Datei ohne diese erste Zeile): 8b63540aa495249dc1331cf025b83758e2b480ca5d59a6726adc00f77b663ec0
 reboot:
   fields:
     entry_id:
@@ -35,6 +35,20 @@ set_wlan:
 
 check_for_update:
   fields:
+    entry_id:
+      required: false
+      example: "0123456789abcdef"
+      selector:
+        text:
+
+create_backup:
+  fields:
+    password:
+      required: true
+      example: "mein-backup-kennwort"
+      selector:
+        text:
+          type: password
     entry_id:
       required: false
       example: "0123456789abcdef"

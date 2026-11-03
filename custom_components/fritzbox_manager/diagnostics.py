@@ -1,4 +1,4 @@
-# SHA256 (Inhalt ab Zeile 2, d.h. dieser Datei ohne diese erste Zeile): 66c57099fa1e252f54527d1a12d0d667094342c5f6b86486f2e98f3534e549dd
+# SHA256 (Inhalt ab Zeile 2, d.h. dieser Datei ohne diese erste Zeile): 27d96db2ee41025e769aaf11eda84fcb3eec70a6f12604e1a7c157c0a6cddafa
 """Anonymisierter Diagnose-Download."""
 
 from __future__ import annotations
@@ -37,6 +37,11 @@ async def async_get_config_entry_diagnostics(
             {k: net.get(k) for k in ("key", "enabled", "guest", "band", "channel", "standard")}
             for net in wlan.get("networks", [])
         ],
+        "experimental": {
+            "enabled": manager.experimental_enabled,
+            "backup_active": manager.backup_enabled,
+            "backup_files": len(manager.backups),
+        },
         "log_entries": len(manager.log),
         "update_info": {
             k: v
