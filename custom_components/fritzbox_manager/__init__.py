@@ -1,4 +1,4 @@
-# SHA256 (Inhalt ab Zeile 2, d.h. dieser Datei ohne diese erste Zeile): 554dd7c8709585897862d8b14a228deb53a29049ba22e3f534a7f38a071771e9
+# SHA256 (Inhalt ab Zeile 2, d.h. dieser Datei ohne diese erste Zeile): 50bb46c07d9919e293799fb9813d67eb72325f9a86966f211c740c37193e7563
 """Die Integration FRITZ!Box Manager."""
 
 from __future__ import annotations
@@ -147,6 +147,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: FritzConfigEntry) -> bo
     unloaded = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unloaded:
         entry.runtime_data.client.close()
+        await hass.async_add_executor_job(entry.runtime_data.client.close_web)
     return unloaded
 
 

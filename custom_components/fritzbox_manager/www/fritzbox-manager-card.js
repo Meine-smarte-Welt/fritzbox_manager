@@ -1,4 +1,4 @@
-// SHA256 (Inhalt ab Zeile 2, d.h. dieser Datei ohne diese erste Zeile): 46c698da25d3c9d195cb2c76526fcf11b7157a67ce005a48bdd9efa8f0db8057
+// SHA256 (Inhalt ab Zeile 2, d.h. dieser Datei ohne diese erste Zeile): 918b770328ef9d29b72a692c9cedd24aae5c6b835d0e9e4a1127af85e474fb44
 /**
  * FRITZ!Box Manager Card
  *
@@ -10,7 +10,7 @@
  * Aufbau nach dem Design-Master von "Meine smarte Welt".
  */
 
-const CARD_VERSION = "0.0.2b1";
+const CARD_VERSION = "0.0.3b1";
 const DOMAIN = "fritzbox_manager";
 const WS_SUBSCRIBE = "fritzbox_manager/subscribe";
 const WS_ACTION = "fritzbox_manager/action";
@@ -139,7 +139,7 @@ const I18N = {
     v_hint: "Aktualisiere über HACS und starte Home Assistant neu. Danach Browser neu laden (Strg+F5).",
     v_beta_hint: "Dies ist eine Beta-Version. In HACS müssen „Beta-Versionen anzeigen“ aktiv sein, um Beta-Updates zu sehen.",
     c_host: "Adresse", c_state: "Zustand", c_connected: "verbunden", c_disconnected: "nicht erreichbar", c_updated: "Letzte Abfrage", c_interval: "Abfrageintervall", c_secure: "Verschlüsselt (HTTPS)", c_yes: "ja", c_no: "nein",
-    o_scan: "Abfrageintervall (Sekunden)", o_events: "Home-Assistant-Ereignisse senden", o_events_hint: "Internet getrennt/verbunden, neue IP-Adresse, Firmware-Update.", o_cpu: "CPU-Temperatur abfragen (experimentell)", o_cpu_hint: "Nutzt eine nicht öffentlich dokumentierte Schnittstelle der Box.", o_saved: "Gespeichert", o_readonly: "Nur Ansicht – Änderungen sind in dieser Karte gesperrt.", o_admin: "Änderungen sind Administratoren vorbehalten.",
+    o_scan: "Abfrageintervall (Sekunden)", o_events: "Home-Assistant-Ereignisse senden", o_events_hint: "Internet getrennt/verbunden, neue IP-Adresse, Firmware-Update.", o_cpu: "CPU-Temperatur abfragen (experimentell)", o_cpu_hint: "Liest die Weboberfläche der Box (nicht öffentlich dokumentiert); der Benutzer braucht dafür Zugriff auf die Weboberfläche.", a_options_optional: "Optionale Einstellungen", o_saved: "Gespeichert", o_readonly: "Nur Ansicht – Änderungen sind in dieser Karte gesperrt.", o_admin: "Änderungen sind Administratoren vorbehalten.",
     m_reboot: "FRITZ!Box neu starten", m_reboot_hint: "Unterbricht das Internet und alle Netze für einige Minuten.", m_reconnect: "Internetverbindung neu aufbauen", m_reconnect_hint: "Trennt die Verbindung kurz und baut sie neu auf, meist mit neuer IP-Adresse.", m_confirm: "Wirklich?", m_sent: "Auftrag gesendet",
     ev_internet_offline: "Internet getrennt", ev_internet_online: "Internet wieder verbunden", ev_ip_changed: "Neue IP-Adresse", ev_firmware_update: "Firmware-Update verfügbar: {version}", ev_connection_lost: "Verbindung zur FRITZ!Box verloren", ev_connection_restored: "Verbindung zur FRITZ!Box wiederhergestellt",
     ev_wlan_changed_on: "WLAN „{wlan}“ eingeschaltet", ev_wlan_changed_off: "WLAN „{wlan}“ ausgeschaltet", ev_option_changed: "Option geändert: {option}", ev_reboot_requested: "Neustart angefordert", ev_reconnect_requested: "Neuverbindung angefordert",
@@ -193,7 +193,7 @@ const I18N = {
     v_hint: "Update via HACS and restart Home Assistant. Then reload the browser (Ctrl+F5).",
     v_beta_hint: "This is a beta version. In HACS, \"Show beta versions\" must be enabled to see beta updates.",
     c_host: "Address", c_state: "State", c_connected: "connected", c_disconnected: "unreachable", c_updated: "Last poll", c_interval: "Polling interval", c_secure: "Encrypted (HTTPS)", c_yes: "yes", c_no: "no",
-    o_scan: "Polling interval (seconds)", o_events: "Send Home Assistant events", o_events_hint: "Internet down/up, new IP address, firmware update.", o_cpu: "Read CPU temperature (experimental)", o_cpu_hint: "Uses an undocumented interface of the box.", o_saved: "Saved", o_readonly: "View only – changes are locked in this card.", o_admin: "Changes are reserved for administrators.",
+    o_scan: "Polling interval (seconds)", o_events: "Send Home Assistant events", o_events_hint: "Internet down/up, new IP address, firmware update.", o_cpu: "Read CPU temperature (experimental)", o_cpu_hint: "Reads the box's web interface (not publicly documented); the user needs web interface access.", a_options_optional: "Optional settings", o_saved: "Saved", o_readonly: "View only – changes are locked in this card.", o_admin: "Changes are reserved for administrators.",
     m_reboot: "Restart FRITZ!Box", m_reboot_hint: "Interrupts the internet and all networks for a few minutes.", m_reconnect: "Re-establish internet connection", m_reconnect_hint: "Drops the connection briefly and re-establishes it, usually with a new IP address.", m_confirm: "Really?", m_sent: "Request sent",
     ev_internet_offline: "Internet down", ev_internet_online: "Internet connected again", ev_ip_changed: "New IP address", ev_firmware_update: "Firmware update available: {version}", ev_connection_lost: "Lost connection to the FRITZ!Box", ev_connection_restored: "Connection to the FRITZ!Box restored",
     ev_wlan_changed_on: "Wi-Fi \"{wlan}\" turned on", ev_wlan_changed_off: "Wi-Fi \"{wlan}\" turned off", ev_option_changed: "Option changed: {option}", ev_reboot_requested: "Restart requested", ev_reconnect_requested: "Reconnect requested",
@@ -247,7 +247,7 @@ const I18N = {
     v_hint: "Werk bij via HACS en start Home Assistant opnieuw. Laad daarna de browser opnieuw (Ctrl+F5).",
     v_beta_hint: "Dit is een bètaversie. In HACS moet \"Bètaversies tonen\" actief zijn om bèta-updates te zien.",
     c_host: "Adres", c_state: "Status", c_connected: "verbonden", c_disconnected: "onbereikbaar", c_updated: "Laatste opvraging", c_interval: "Ophaalinterval", c_secure: "Versleuteld (HTTPS)", c_yes: "ja", c_no: "nee",
-    o_scan: "Ophaalinterval (seconden)", o_events: "Home Assistant-gebeurtenissen versturen", o_events_hint: "Internet weg/terug, nieuw IP-adres, firmware-update.", o_cpu: "CPU-temperatuur ophalen (experimenteel)", o_cpu_hint: "Gebruikt een niet openbaar gedocumenteerde interface van de box.", o_saved: "Opgeslagen", o_readonly: "Alleen weergave – wijzigingen zijn in deze kaart geblokkeerd.", o_admin: "Wijzigingen zijn voorbehouden aan beheerders.",
+    o_scan: "Ophaalinterval (seconden)", o_events: "Home Assistant-gebeurtenissen versturen", o_events_hint: "Internet weg/terug, nieuw IP-adres, firmware-update.", o_cpu: "CPU-temperatuur ophalen (experimenteel)", o_cpu_hint: "Leest de webinterface van de box (niet openbaar gedocumenteerd); de gebruiker heeft toegang tot de webinterface nodig.", a_options_optional: "Optionele instellingen", o_saved: "Opgeslagen", o_readonly: "Alleen weergave – wijzigingen zijn in deze kaart geblokkeerd.", o_admin: "Wijzigingen zijn voorbehouden aan beheerders.",
     m_reboot: "FRITZ!Box herstarten", m_reboot_hint: "Onderbreekt internet en alle netwerken voor enkele minuten.", m_reconnect: "Internetverbinding opnieuw opbouwen", m_reconnect_hint: "Verbreekt de verbinding kort en bouwt die opnieuw op, meestal met een nieuw IP-adres.", m_confirm: "Zeker?", m_sent: "Opdracht verzonden",
     ev_internet_offline: "Internet verbroken", ev_internet_online: "Internet weer verbonden", ev_ip_changed: "Nieuw IP-adres", ev_firmware_update: "Firmware-update beschikbaar: {version}", ev_connection_lost: "Verbinding met de FRITZ!Box verloren", ev_connection_restored: "Verbinding met de FRITZ!Box hersteld",
     ev_wlan_changed_on: "Wifi \"{wlan}\" ingeschakeld", ev_wlan_changed_off: "Wifi \"{wlan}\" uitgeschakeld", ev_option_changed: "Optie gewijzigd: {option}", ev_reboot_requested: "Herstart aangevraagd", ev_reconnect_requested: "Opnieuw verbinden aangevraagd",
@@ -1579,12 +1579,17 @@ class FritzboxManagerCard extends HTMLElement {
       optBody =
         `<div class="field"><label for="o-scan">${esc(t("o_scan"))}</label><input id="o-scan" type="number" min="10" max="600" step="1" value="${esc(opts.scan_interval)}" data-opt="scan_interval" data-fk="scan"></div>` +
         `<div class="field"><label for="o-ev">${esc(t("o_events"))}<div class="hint">${esc(t("o_events_hint"))}</div></label><input id="o-ev" type="checkbox" data-opt="events_enabled" data-fk="ev"${opts.events_enabled ? " checked" : ""}></div>` +
-        `<div class="field"><label for="o-cpu">${esc(t("o_cpu"))}<div class="hint">${esc(t("o_cpu_hint"))}</div></label><input id="o-cpu" type="checkbox" data-opt="cpu_temperature" data-fk="cpu"${opts.cpu_temperature ? " checked" : ""}></div>`;
+        this._acc(
+          "options_optional",
+          "mdi:tune-variant",
+          t("a_options_optional"),
+          `<div class="field"><label for="o-cpu">${esc(t("o_cpu"))}<div class="hint">${esc(t("o_cpu_hint"))}</div></label><input id="o-cpu" type="checkbox" data-opt="cpu_temperature" data-fk="cpu"${opts.cpu_temperature ? " checked" : ""}></div>`
+        );
     } else {
       optBody =
         this._line(t("o_scan"), esc(opts.scan_interval)) +
         this._line(t("o_events"), esc(t(opts.events_enabled ? "c_yes" : "c_no"))) +
-        this._line(t("o_cpu"), esc(t(opts.cpu_temperature ? "c_yes" : "c_no"))) +
+        this._acc("options_optional", "mdi:tune-variant", t("a_options_optional"), this._line(t("o_cpu"), esc(t(opts.cpu_temperature ? "c_yes" : "c_no")))) +
         `<p class="hint">${esc(t(this._config.read_only ? "o_readonly" : "o_admin"))}</p>`;
     }
     h += this._acc("options", "mdi:tune", t("a_options"), optBody);

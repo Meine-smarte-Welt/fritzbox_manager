@@ -1,4 +1,4 @@
-# SHA256 (Inhalt ab Zeile 2, d.h. dieser Datei ohne diese erste Zeile): 8820266f5e8aafddb01230f9506a4e957523ccdaaade44fa095e59f830722a27
+# SHA256 (Inhalt ab Zeile 2, d.h. dieser Datei ohne diese erste Zeile): b4072c490762d23c676b3f90e1f5706f1c2a9d23aaee109cceb6e64c0f993916
 """Config Flow: Einrichtung, Anmeldung erneuern, Neu konfigurieren, Optionen."""
 
 from __future__ import annotations
@@ -11,6 +11,7 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_SSL, CONF_USERNAME
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import section
 from homeassistant.helpers.selector import (
     BooleanSelector,
     NumberSelector,
@@ -43,6 +44,9 @@ from .const import (
 from .fritz_client import FritzCannotConnect, FritzClient, FritzInvalidAuth
 
 _LOGGER = logging.getLogger(__name__)
+
+# Einklappbarer Abschnitt („Akkordeon“) im Optionen-Dialog für die optionalen Einstellungen.
+SECTION_OPTIONAL = "optional"
 
 
 def _connection_schema(defaults: dict[str, Any], *, with_host: bool = True) -> vol.Schema:
@@ -160,35 +164,24 @@ class FritzOptionsFlow(OptionsFlow):
 
     async def async_step_init(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         if user_input is not None:
+            # Die optionalen Einstellungen kommen verschachtelt aus dem Abschnitt; gespeichert
+            # wird weiter flach, damit bestehende Optionen und die Karte unverändert passen.
+            optional = user_input.get(SECTION_OPTIONAL) or {}
             return self.async_create_entry(
                 data={
                     CONF_SCAN_INTERVAL: int(user_input[CONF_SCAN_INTERVAL]),
                     CONF_EVENTS_ENABLED: bool(user_input[CONF_EVENTS_ENABLED]),
-                    CONF_CPU_TEMPERATURE: bool(user_input[CONF_CPU_TEMPERATURE]),
-                    CONF_EXPERIMENTAL_ENABLED: bool(user_input[CONF_EXPERIMENTAL_ENABLED]),
-                    CONF_BACKUP_ENABLED: bool(user_input[CONF_BACKUP_ENABLED]),
-                    CONF_BACKUP_KEEP: int(user_input[CONF_BACKUP_KEEP]),
+                    CONF_CPU_TEMPERATURE: bool(optional.get(CONF_CPU_TEMPERATURE, DEFAULT_CPU_TEMPERATURE)),
+                    CONF_EXPERIMENTAL_ENABLED: bool(
+                        optional.get(CONF_EXPERIMENTAL_ENABLED, DEFAULT_EXPERIMENTAL_ENABLED)
+                    ),
+                    CONF_BACKUP_ENABLED: bool(optional.get(CONF_BACKUP_ENABLED, DEFAULT_BACKUP_ENABLED)),
+                    CONF_BACKUP_KEEP: int(optional.get(CONF_BACKUP_KEEP, DEFAULT_BACKUP_KEEP)),
                 }
             )
         options = self.config_entry.options
-        schema = vol.Schema(
+        optional_schema = vol.Schema(
             {
-                vol.Required(
-                    CONF_SCAN_INTERVAL,
-                    default=options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL),
-                ): NumberSelector(
-                    NumberSelectorConfig(
-                        min=MIN_SCAN_INTERVAL,
-                        max=MAX_SCAN_INTERVAL,
-                        step=1,
-                        mode=NumberSelectorMode.BOX,
-                        unit_of_measurement="s",
-                    )
-                ),
-                vol.Required(
-                    CONF_EVENTS_ENABLED,
-                    default=options.get(CONF_EVENTS_ENABLED, DEFAULT_EVENTS_ENABLED),
-                ): BooleanSelector(),
                 vol.Required(
                     CONF_CPU_TEMPERATURE,
                     default=options.get(CONF_CPU_TEMPERATURE, DEFAULT_CPU_TEMPERATURE),
@@ -213,6 +206,28 @@ class FritzOptionsFlow(OptionsFlow):
                         mode=NumberSelectorMode.BOX,
                     )
                 ),
+            }
+        )
+        schema = vol.Schema(
+            {
+                vol.Required(
+                    CONF_SCAN_INTERVAL,
+                    default=options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL),
+                ): NumberSelector(
+                    NumberSelectorConfig(
+                        min=MIN_SCAN_INTERVAL,
+                        max=MAX_SCAN_INTERVAL,
+                        step=1,
+                        mode=NumberSelectorMode.BOX,
+                        unit_of_measurement="s",
+                    )
+                ),
+                vol.Required(
+                    CONF_EVENTS_ENABLED,
+                    default=options.get(CONF_EVENTS_ENABLED, DEFAULT_EVENTS_ENABLED),
+                ): BooleanSelector(),
+                # Alle optionalen Einstellungen in einem eingeklappten Abschnitt.
+                vol.Required(SECTION_OPTIONAL): section(optional_schema, {"collapsed": True}),
             }
         )
         return self.async_show_form(

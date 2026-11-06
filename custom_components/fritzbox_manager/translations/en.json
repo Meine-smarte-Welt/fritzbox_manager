@@ -50,11 +50,19 @@
         "description": "Installed version: {version}. {update_info}",
         "data": {
           "scan_interval": "Polling interval (seconds)",
-          "events_enabled": "Send Home Assistant events (internet down/up, new IP, firmware update)",
-          "cpu_temperature": "Read CPU temperature (experimental, uses an undocumented interface of the box)",
-          "experimental_enabled": "Allow experimental features (unverified, master switch)",
-          "backup_enabled": "Experimental: backup of the FRITZ!Box settings (needs the master switch)",
-          "backup_keep": "Backup: number of files to keep (older ones are deleted)"
+          "events_enabled": "Send Home Assistant events (internet down/up, new IP, firmware update)"
+        },
+        "sections": {
+          "optional": {
+            "name": "Optional settings",
+            "description": "Experimental and rarely used features. They are unverified and off by default.",
+            "data": {
+              "cpu_temperature": "Read CPU temperature (experimental, reads the box's web interface)",
+              "experimental_enabled": "Allow experimental features (unverified, master switch)",
+              "backup_enabled": "Experimental: backup of the FRITZ!Box settings (needs the master switch)",
+              "backup_keep": "Backup: number of files to keep (older ones are deleted)"
+            }
+          }
         }
       }
     }

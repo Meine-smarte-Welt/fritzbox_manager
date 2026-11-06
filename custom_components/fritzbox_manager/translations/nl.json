@@ -50,11 +50,19 @@
         "description": "Geïnstalleerde versie: {version}. {update_info}",
         "data": {
           "scan_interval": "Ophaalinterval (seconden)",
-          "events_enabled": "Home Assistant-gebeurtenissen versturen (internet weg/terug, nieuw IP, firmware-update)",
-          "cpu_temperature": "CPU-temperatuur ophalen (experimenteel, gebruikt een niet openbaar gedocumenteerde interface van de box)",
-          "experimental_enabled": "Experimentele functies toestaan (ongetest, hoofdschakelaar)",
-          "backup_enabled": "Experimenteel: back-up van de FRITZ!Box-instellingen (vereist de hoofdschakelaar)",
-          "backup_keep": "Back-up: aantal te bewaren bestanden (oudere worden verwijderd)"
+          "events_enabled": "Home Assistant-gebeurtenissen versturen (internet weg/terug, nieuw IP, firmware-update)"
+        },
+        "sections": {
+          "optional": {
+            "name": "Optionele instellingen",
+            "description": "Experimentele en minder gebruikte functies. Ze zijn ongetest en standaard uit.",
+            "data": {
+              "cpu_temperature": "CPU-temperatuur ophalen (experimenteel, leest de webinterface van de box)",
+              "experimental_enabled": "Experimentele functies toestaan (ongetest, hoofdschakelaar)",
+              "backup_enabled": "Experimenteel: back-up van de FRITZ!Box-instellingen (vereist de hoofdschakelaar)",
+              "backup_keep": "Back-up: aantal te bewaren bestanden (oudere worden verwijderd)"
+            }
+          }
         }
       }
     }

@@ -1,4 +1,4 @@
-# SHA256 (Inhalt ab Zeile 2, d.h. dieser Datei ohne diese erste Zeile): d0f0585f49848600606c23ee8872d4b4a40c8ad8dd51129089e4dd3f6336c13b
+# SHA256 (Inhalt ab Zeile 2, d.h. dieser Datei ohne diese erste Zeile): 769fb6923fc0de0c82ef0b32712c4f3c80f15886f1ec6ccb7d0e6ae924f3a41d
 """Konstanten der Integration FRITZ!Box Manager."""
 
 from __future__ import annotations
@@ -11,7 +11,7 @@ DOMAIN: Final = "fritzbox_manager"
 
 # Version dieser Integration. MUSS mit manifest.json und CARD_VERSION in der
 # Karte (www/fritzbox-manager-card.js) identisch sein (Prüfung vor dem Release).
-VERSION: Final = "0.0.2b1"
+VERSION: Final = "0.0.3b1"
 GITHUB_REPO: Final = "Meine-smarte-Welt/fritzbox_manager"
 GITHUB_RELEASES_URL: Final = f"https://github.com/{GITHUB_REPO}/releases"
 MANUFACTURER: Final = "AVM"

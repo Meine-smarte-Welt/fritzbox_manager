@@ -50,11 +50,19 @@
         "description": "Installierte Version: {version}. {update_info}",
         "data": {
           "scan_interval": "Abfrageintervall (Sekunden)",
-          "events_enabled": "Home-Assistant-Ereignisse senden (Internet getrennt/verbunden, neue IP, Firmware-Update)",
-          "cpu_temperature": "CPU-Temperatur abfragen (experimentell, nutzt eine nicht öffentlich dokumentierte Schnittstelle der Box)",
-          "experimental_enabled": "Experimentelle Funktionen zulassen (ungeprüft, Hauptschalter)",
-          "backup_enabled": "Experimentell: Backup der FRITZ!Box-Einstellungen (nur mit Hauptschalter)",
-          "backup_keep": "Backup: so viele Dateien aufbewahren (ältere werden gelöscht)"
+          "events_enabled": "Home-Assistant-Ereignisse senden (Internet getrennt/verbunden, neue IP, Firmware-Update)"
+        },
+        "sections": {
+          "optional": {
+            "name": "Optionale Einstellungen",
+            "description": "Experimentelle und seltener genutzte Funktionen. Diese Funktionen sind ungeprüft und standardmäßig aus.",
+            "data": {
+              "cpu_temperature": "CPU-Temperatur abfragen (experimentell, liest die Weboberfläche der Box)",
+              "experimental_enabled": "Experimentelle Funktionen zulassen (ungeprüft, Hauptschalter)",
+              "backup_enabled": "Experimentell: Backup der FRITZ!Box-Einstellungen (nur mit Hauptschalter)",
+              "backup_keep": "Backup: so viele Dateien aufbewahren (ältere werden gelöscht)"
+            }
+          }
         }
       }
     }

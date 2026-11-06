@@ -1,4 +1,4 @@
-# SHA256 (Inhalt ab Zeile 2, d.h. dieser Datei ohne diese erste Zeile): 0301bc3d67cfb76bb3fe6232ca79ae9cefba2808e050c2e844e05513e30690a2
+# SHA256 (Inhalt ab Zeile 2, d.h. dieser Datei ohne diese erste Zeile): e6a28968e8e7781c04b543dcd68072266bdc9e7462f4419dc202f4a60c474b1a
 """Blockierender TR-064-Zugriff auf die FRITZ!Box (fritzconnection).
 
 Alle Methoden blockieren und müssen aus dem Executor aufgerufen werden.
@@ -35,6 +35,7 @@ from fritzconnection.core.exceptions import (
 from requests.exceptions import RequestException
 
 from .const import BACKUP_MAX_BYTES, REQUEST_TIMEOUT
+from .webui import WebUi, WebUiError
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -140,6 +141,8 @@ class FritzClient:
         self._password = password or None
         self._ssl = bool(ssl)
         self._fc: FritzConnection | None = None
+        self._fc_tls: FritzConnection | None = None
+        self._web: WebUi | None = None
         self._lock = threading.Lock()
         self.serial: str | None = None
 
@@ -178,6 +181,13 @@ class FritzClient:
         """Verbindung verwerfen (die nächste Abfrage baut sie neu auf)."""
         with self._lock:
             self._fc = None
+            self._fc_tls = None
+
+    def close_web(self) -> None:
+        """Sitzung an der Weboberfläche beenden (blockiert, gehört in den Executor)."""
+        web, self._web = self._web, None
+        if web is not None:
+            web.close()
 
     # --- Abfrage -------------------------------------------------------
     def fetch(self, *, cpu_temperature: bool = False) -> dict[str, Any]:
@@ -380,43 +390,20 @@ class FritzClient:
         }
 
     def _read_wlan(self) -> dict[str, Any]:
-        raw: list[dict[str, Any]] = []
-        first_error: Exception | None = None
-        for index in range(1, MAX_WLAN_NETWORKS + 1):
-            service = f"WLANConfiguration{index}"
-            if not self._has_service(service):
-                break
-            try:
-                info = self._call(service, "GetInfo")
-            except _UNSUPPORTED + _REFUSED as ex:
-                first_error = first_error or ex
-                continue
-            clients: int | None = None
-            try:
-                clients = _int(self._call(service, "GetTotalAssociations").get("NewTotalAssociations"))
-            except _UNSUPPORTED + _REFUSED:
-                pass
-            ext: dict[str, Any] = {}
-            try:
-                ext = self._call(service, "X_AVM-DE_GetWLANExtInfo")
-            except _UNSUPPORTED + _REFUSED:
-                pass
-            channel = _int(info.get("NewChannel"))
-            raw.append(
-                {
-                    "index": index,
-                    "key": f"wlan{index}",
-                    "ssid": _text(info.get("NewSSID")),
-                    "enabled": bool(info.get("NewEnable")),
-                    "status": _text(info.get("NewStatus")),
-                    "channel": channel if channel else None,
-                    "standard": _text(info.get("NewStandard")),
-                    "band": _band_from_text(ext.get("NewX_AVM-DE_FrequencyBand"))
-                    or _band_from_channel(channel),
-                    "clients": clients,
-                    "_ap_type": _text(ext.get("NewX_AVM-DE_APType")),
-                }
-            )
+        """WLAN-Netze lesen. Nur ``GetInfo`` ist Pflicht; alles andere fehlt notfalls einfach."""
+        assert self._fc is not None
+        raw, first_error = self._collect_wlan(self._fc)
+        if not raw and first_error is not None and not self._ssl:
+            # Manche Boxen verweigern die WLAN-Abfrage über die unverschlüsselte Schnittstelle
+            # (Port 49000). Dann einmal über die verschlüsselte (Port 49443) versuchen.
+            tls = self._tls_connection()
+            if tls is not None:
+                raw, _tls_error = self._collect_wlan(tls)
+                if raw:
+                    _LOGGER.debug(
+                        "WLAN über HTTPS gelesen, über HTTP verweigert (%s)", type(first_error).__name__
+                    )
+                    first_error = None
         if not raw and first_error is not None:
             # Die Box bietet WLAN-Dienste an, hat aber jede Abfrage abgelehnt (meist fehlt dem
             # Benutzer das Recht "FRITZ!Box Einstellungen"). Das wird gemeldet statt verschwiegen.
@@ -435,20 +422,106 @@ class FritzClient:
             total = sum(counts)
         return {"networks": raw, "clients_total": total}
 
+    @staticmethod
+    def _collect_wlan(fc: FritzConnection) -> tuple[list[dict[str, Any]], Exception | None]:
+        """Alle WLAN-Dienste einer Verbindung lesen. Gibt (Netze, erster Fehler von GetInfo) zurück."""
+        raw: list[dict[str, Any]] = []
+        first_error: Exception | None = None
+
+        def optional(service: str, action: str) -> dict[str, Any]:
+            """Zusatzangabe: jeder Fehler außer abgelehnter Anmeldung ergibt nur „keine Angabe“."""
+            try:
+                return fc.call_action(service, action) or {}
+            except FritzAuthorizationError:
+                raise
+            except (FritzConnectionException, RequestException, OSError, KeyError, ValueError, TypeError) as ex:
+                _LOGGER.debug("%s.%s nicht lesbar: %s", service, action, type(ex).__name__)
+                return {}
+
+        for index in range(1, MAX_WLAN_NETWORKS + 1):
+            service = f"WLANConfiguration{index}"
+            if service not in fc.services:
+                break
+            try:
+                info = fc.call_action(service, "GetInfo")
+            except FritzAuthorizationError:
+                raise
+            except (FritzConnectionException, RequestException, OSError, ValueError, TypeError) as ex:
+                first_error = first_error or ex
+                _LOGGER.debug("%s.GetInfo nicht lesbar: %s", service, type(ex).__name__)
+                continue
+            clients = _int(optional(service, "GetTotalAssociations").get("NewTotalAssociations"))
+            ext = optional(service, "X_AVM-DE_GetWLANExtInfo")
+            channel = _int(info.get("NewChannel"))
+            raw.append(
+                {
+                    "index": index,
+                    "key": f"wlan{index}",
+                    "ssid": _text(info.get("NewSSID")),
+                    "enabled": bool(info.get("NewEnable")),
+                    "status": _text(info.get("NewStatus")),
+                    "channel": channel if channel else None,
+                    "standard": _text(info.get("NewStandard")),
+                    "band": _band_from_text(ext.get("NewX_AVM-DE_FrequencyBand"))
+                    or _band_from_channel(channel),
+                    "clients": clients,
+                    "_ap_type": _text(ext.get("NewX_AVM-DE_APType")),
+                }
+            )
+        return raw, first_error
+
+    def _tls_connection(self) -> FritzConnection | None:
+        """Verschlüsselte TR-064-Verbindung (Standardport 49443) zur selben Box, einmalig aufgebaut."""
+        if self._fc_tls is not None:
+            return self._fc_tls
+        try:
+            self._fc_tls = FritzConnection(
+                address=self._host,
+                port=None,
+                user=self._username,
+                password=self._password,
+                timeout=REQUEST_TIMEOUT,
+                use_tls=True,
+            )
+        except (FritzConnectionException, RequestException, OSError, ValueError) as ex:
+            _LOGGER.debug("Verschlüsselte TR-064-Verbindung nicht möglich: %s", type(ex).__name__)
+            return None
+        return self._fc_tls
+
     def _read_lan(self) -> dict[str, Any]:
         info = self._call("Hosts1", "GetHostNumberOfEntries")
         return {"hosts_total": _int(info.get("NewHostNumberOfEntries"))}
 
     def _read_cpu(self) -> dict[str, Any]:
-        """CPU-Temperatur über die nicht öffentlich dokumentierte query.lua (experimentell)."""
-        assert self._fc is not None
-        values = self._fc.get_cpu_temperatures()
-        return {"cpu_temperature": values[0] if values else None}
+        """CPU-Temperatur über die Weboberfläche (``ecoStat``, experimentell, wie FRITZ!Box Netzwerk)."""
+        if self._web is None:
+            self._web = WebUi(self._host, self._username, self._password, self._ssl)
+        try:
+            return {"cpu_temperature": self._web.cpu_temperature()}
+        except WebUiError as ex:
+            raise _SectionFailed(ex.reason) from ex
 
     # --- Aktionen -------------------------------------------------------
     def set_wlan(self, index: int, enabled: bool) -> None:
-        """WLAN-Netz ein-/ausschalten."""
-        self._action(f"WLANConfiguration{int(index)}", "SetEnable", NewEnable=bool(enabled))
+        """WLAN-Netz ein-/ausschalten (bei verweigerter HTTP-Verbindung einmal über HTTPS)."""
+        service = f"WLANConfiguration{int(index)}"
+        try:
+            self._action(service, "SetEnable", NewEnable=bool(enabled))
+        except FritzActionFailed:
+            if self._ssl:
+                raise
+            with self._lock:
+                tls = self._tls_connection()
+                if tls is None:
+                    raise
+                try:
+                    tls.call_action(service, "SetEnable", arguments={"NewEnable": bool(enabled)})
+                except FritzAuthorizationError as ex:
+                    raise FritzInvalidAuth(str(ex)) from ex
+                except FritzConnectionException as ex:
+                    raise FritzActionFailed(type(ex).__name__) from ex
+                except (RequestException, OSError) as ex:
+                    raise FritzCannotConnect(str(ex)) from ex
 
     def reboot(self) -> None:
         """FRITZ!Box neu starten."""

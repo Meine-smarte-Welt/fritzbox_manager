@@ -9,7 +9,7 @@
 
 > *Verkorte Nederlandse versie – de volledige documentatie is de [Duitse README](README.md).*
 
-> **⚠️ Bèta (pre-release 0.0.2b1).** Deze versie is **niet getest met een echte FRITZ!Box**. Ze is gecontroleerd met een gesimuleerde TR-064-interface en met testgegevens in de browser. Alles wat van het gedrag van een echte box afhangt, is **niet gecontroleerd** (zie "Bekende beperkingen").
+> **⚠️ Bèta (pre-release 0.0.3b1).** Deze versie is **niet getest met een echte FRITZ!Box**. Ze is gecontroleerd met een gesimuleerde TR-064-interface en met testgegevens in de browser. Alles wat van het gedrag van een echte box afhangt, is **niet gecontroleerd** (zie "Bekende beperkingen").
 
 Home Assistant-integratie met dashboardkaart voor de systeemgegevens van je FRITZ!Box, bedoeld als vervanging van de kaarten rond FRITZ!Box Tools. De kaart toont overzicht, box, internet en wifi, opent je zusterintegraties **FRITZ!Box Anrufe** (gesprekken), **FRITZ!Box Netzwerk** (netwerk) en **FRITZ!Box Ereignisse** (gebeurtenissen) als popup en heeft een instellingentab met versieweergave.
 
@@ -20,16 +20,17 @@ Home Assistant-integratie met dashboardkaart voor de systeemgegevens van je FRIT
 - Entiteiten: sensoren, binaire sensoren, wifi-schakelaars, knoppen (herstart, opnieuw verbinden).
 - Talen: Duits, Engels, Nederlands.
 
-## Nieuw in 0.0.2b1
+## Nieuw in 0.0.3b1
 
-- **Experimenteel: back-up.** Instellingen → *Experimenteel*: de kaart start via TR-064 een back-up van de FRITZ!Box-instellingen (met een zelfgekozen wachtwoord) en slaat het bestand op in `config/fritzbox_manager_backups/`. Alleen beheerders, twee schakelaars (hoofdschakelaar *Experimentele functies* en *Back-up*), beide standaard uit; het wachtwoord wordt niet opgeslagen of gelogd. **Niet getest met een echte box.**
-- **Gecorrigeerd: DSL-waarden "0".** Heeft de box geen DSL-verbinding (bijv. glasvezelmodellen), dan toont de kaart "–" met een hint in plaats van nullen.
-- **Beter te diagnosticeren: lege wifi-lijst.** Kan de box de wifi-netwerken niet leveren, dan noemt de kaart de reden (bijv. ontbrekende gebruikersrechten). De werkelijke oorzaak van het gemelde geval is **niet bevestigd**; controleer het recht "FRITZ!Box-instellingen" van de gebruiker.
-- Nieuw: service `fritzbox_manager.create_backup`, gebeurtenis `fritzbox_manager_backup_created`, opties *Experimentele functies*, *Back-up*, *Aantal bewaarde back-ups*.
+- **Nieuwe logo's** (`brand/`): pictogram en logo met het nieuwe routersymbool.
+- **Opties gebundeld.** In het optiesdialoogvenster staan de optionele instellingen (CPU-temperatuur, experimentele functies, back-up, aantal back-ups) nu in een **inklapbaar onderdeel** (accordeon). In de kaart staan ze als subonderdeel *Optionele instellingen* onder *Instellingen → Opties*. Opgeslagen opties blijven ongewijzigd.
+- **Gewijzigd: CPU-temperatuur** wordt nu net als bij *FRITZ!Box Netzwerk* via de webinterface van de box gelezen (pagina `ecoStat`) in plaats van via TR-064. De sessie wordt hergebruikt, zodat de box niet bij elke opvraging een aanmelding meldt. Nog steeds experimenteel en **in dit project niet getest met een echte box**; de verwerking komt uit de Netzwerk-integratie, waar de waarde werkt.
+- **Gewijzigd: wifi in HTTP-modus.** De wifi-opvraging is toleranter (alleen de basisgegevens zijn verplicht, extra's mogen ontbreken) en valt eenmalig terug op de versleutelde interface (poort 49443) als de onversleutelde opvraging wordt geweigerd; dit geldt ook voor het schakelen. **Oorzaak niet bevestigd, wijziging niet getest met een echte box.** Helpt het niet, meld dan de reden die de kaart toont onder *Instellingen → Verbinding*.
+- Back-up (experimenteel) is ongewijzigd; zie [EXPERIMENTELL.md](EXPERIMENTELL.md) (Duits).
 
 ## Schermafbeeldingen
 
-Alle afbeeldingen tonen **versie 0.0.1b0 met testgegevens** (geen echte FRITZ!Box); ze zijn niet opnieuw gemaakt voor 0.0.2b1.
+Alle afbeeldingen tonen **versie 0.0.1b0 met testgegevens** (geen echte FRITZ!Box); ze zijn niet opnieuw gemaakt voor 0.0.3b1.
 
 | Overzicht | Wifi-popup |
 |:-:|:-:|
@@ -74,7 +75,7 @@ Schrijfacties alleen voor beheerders en in de backend gecontroleerd; riskante ac
 
 - **Niet getest op echte hardware** (alleen gesimuleerd TR-064 en testgegevens in de browser).
 - Gast-wifi en frequentieband zijn heuristieken (bij 3+ netwerken geldt het laatste als gast; band afgeleid van het kanaal; 6 GHz niet onderscheiden).
-- Geen CPU-/RAM-belasting; CPU-temperatuur alleen experimenteel via een niet-openbare interface (standaard uit).
+- Geen CPU-/RAM-belasting; CPU-temperatuur alleen experimenteel via de niet-openbare webinterface van de box (standaard uit). De gebruiker heeft toegang tot de webinterface nodig; redenen staan in de kaart onder *Instellingen → Verbinding* (`cpu: web_login` = aanmelding geweigerd, `web_blocked` = aanmelding geblokkeerd, `web_unreachable` = webinterface niet bereikbaar, `web_http`/`web_no_data` = onverwacht antwoord).
 - **Back-up is niet gecontroleerd:** of de box de back-up via TR-064 levert, hangt af van model, FRITZ!OS, gebruikersrechten en eventueel tweefactorbevestiging; het kan met een foutmelding eindigen. Het wachtwoord wordt niet opgeslagen – zonder kan het bestand niet op de box worden hersteld. Het bestandsformaat wordt niet gevalideerd. Herstellen gebeurt bewust alleen op de box zelf (*Systeem → Back-up*).
 - Glasvezelmodellen hebben geen DSL-waarden (bijv. FRITZ!Box 5690 Pro).
 - Engels en Nederlands zijn niet door moedertaalsprekers gecontroleerd.
@@ -84,6 +85,7 @@ Schrijfacties alleen voor beheerders en in de backend gecontroleerd; riskante ac
 
 | Versie | Wijzigingen |
 |---|---|
+| **0.0.3b1** | Nieuwe logo's. Optionele instellingen in een inklapbaar onderdeel (optiesdialoog en kaart). CPU-temperatuur via de webinterface (zoals FRITZ!Box Netzwerk). Wifi toleranter in HTTP-modus, met terugval op de versleutelde interface. |
 | **0.0.2b1** | Experimenteel: back-up van boxinstellingen (service, kaart, gebeurtenis). DSL-nullen bij modellen zonder DSL als "–". Reden bij lege wifi-lijst getoond. |
 | **0.0.1b0** | Eerste release (bèta). |
 
@@ -93,12 +95,12 @@ Schrijfacties alleen voor beheerders en in de backend gecontroleerd; riskante ac
 
 | Bestand | SHA256 |
 |---|---|
-| `custom_components/fritzbox_manager/manifest.json` | `918064437ac1fb636b047a4648260b195759b016aab65f9d941bb2bd89aba937` |
-| `custom_components/fritzbox_manager/strings.json` | `0d86ec24f652e4db9d9df83aa7006bd0af0b84d4ee667a6318aaabdb50021e4b` |
+| `custom_components/fritzbox_manager/manifest.json` | `2a69b0d226133d3065ffe64a5c6aa43a1c3b0bd0bb4f950859603be9d63fe9a7` |
+| `custom_components/fritzbox_manager/strings.json` | `cef404d0990ac21bba2f8d3282670023b71abaac4112b43274328f174b99ddea` |
 | `custom_components/fritzbox_manager/icons.json` | `b8b33129c6a6251f46d807f220e325b85d5923ec945e91a33b77a1f2f529ce0e` |
-| `custom_components/fritzbox_manager/translations/de.json` | `0d86ec24f652e4db9d9df83aa7006bd0af0b84d4ee667a6318aaabdb50021e4b` |
-| `custom_components/fritzbox_manager/translations/en.json` | `ceaf72b1ea6eb5f076248f7130846f53e3a74be7f75e48aeefdef061f13ede76` |
-| `custom_components/fritzbox_manager/translations/nl.json` | `4f449f35bcc4c4e822f2282b7316e200456a004af1cbe11025e09f1002c8f7ff` |
+| `custom_components/fritzbox_manager/translations/de.json` | `cef404d0990ac21bba2f8d3282670023b71abaac4112b43274328f174b99ddea` |
+| `custom_components/fritzbox_manager/translations/en.json` | `8e18df6cdf762fbb005e273e9a6db894624e6269b2b94443d29dbab73e699915` |
+| `custom_components/fritzbox_manager/translations/nl.json` | `7665e6a3f05d5fdf3a06ef452c557d49a6a23ce4a6494280b310574fbeb7d8f3` |
 | `hacs.json` | `360a813ce8c9ed6a42abd57d21c4b416646ffe3fe6777d8fd89145e9ef989a71` |
 
 ## Licentie

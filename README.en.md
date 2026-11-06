@@ -9,7 +9,7 @@
 
 > *Short English version – the complete documentation is the [German README](README.md).*
 
-> **⚠️ Beta (pre-release 0.0.2b1).** This version is **not tested on a real FRITZ!Box**. It was checked against a simulated TR-064 interface and with test data in the browser. Anything depending on real box behaviour is **unverified** (see "Known limitations").
+> **⚠️ Beta (pre-release 0.0.3b1).** This version is **not tested on a real FRITZ!Box**. It was checked against a simulated TR-064 interface and with test data in the browser. Anything depending on real box behaviour is **unverified** (see "Known limitations").
 
 Home Assistant integration with a dashboard card for your FRITZ!Box system data, meant as a replacement for the FRITZ!Box Tools cards. It shows overview, box, internet and Wi-Fi, opens your sibling integrations **FRITZ!Box Anrufe** (calls), **FRITZ!Box Netzwerk** (network) and **FRITZ!Box Ereignisse** (events) as popups, and has a settings tab with version display.
 
@@ -20,16 +20,17 @@ Home Assistant integration with a dashboard card for your FRITZ!Box system data,
 - Entities: sensors, binary sensors, Wi-Fi switches, buttons (reboot, reconnect).
 - Languages: German, English, Dutch.
 
-## What's new in 0.0.2b1
+## What's new in 0.0.3b1
 
-- **Experimental: backup.** Settings → *Experimental*: the card triggers a backup of the FRITZ!Box settings via TR-064 (with a password you choose) and saves the file to `config/fritzbox_manager_backups/`. Admins only, two switches (master switch *Experimental features* and *Backup*), both off by default; the password is neither stored nor logged. **Not tested on a real box.**
-- **Fixed: DSL values "0".** If the box has no DSL link (e.g. fibre models), the card shows "–" with a hint instead of zeros.
-- **Easier to diagnose: empty Wi-Fi list.** If the box cannot deliver the Wi-Fi networks, the card names the reason (e.g. missing user rights). The actual cause of the reported case is **unconfirmed**; please check the user's right "FRITZ!Box settings".
-- New: service `fritzbox_manager.create_backup`, event `fritzbox_manager_backup_created`, options *Experimental features*, *Backup*, *Backups to keep*.
+- **New logos** (`brand/`): icon and logo with the new router symbol.
+- **Options grouped.** In the options dialog the optional settings (CPU temperature, experimental features, backup, backups to keep) now sit in a **collapsible section** (accordion). In the card they are a sub-section *Optional settings* under *Settings → Options*. Stored options are unchanged.
+- **Changed: CPU temperature** is now read from the box's web interface (page `ecoStat`), like *FRITZ!Box Netzwerk*, instead of TR-064. The session is reused so the box does not report a login on every poll. Still experimental and **unverified on a real box in this project**; the parsing comes from the Netzwerk integration, where the value works.
+- **Changed: Wi-Fi in HTTP mode.** The Wi-Fi query is more tolerant (only the basic network data is mandatory, extras may be missing) and falls back once to the encrypted interface (port 49443) when the unencrypted query is refused; this also applies to switching. **Cause unconfirmed, change unverified on a real box.** If it does not help, please report the reason shown by the card under *Settings → Connection*.
+- Backup (experimental) is unchanged; see [EXPERIMENTELL.md](EXPERIMENTELL.md) (German).
 
 ## Screenshots
 
-All images show **version 0.0.1b0 with test data** (no real FRITZ!Box); they have not been regenerated for 0.0.2b1.
+All images show **version 0.0.1b0 with test data** (no real FRITZ!Box); they have not been regenerated for 0.0.3b1.
 
 | Overview | Wi-Fi popup |
 |:-:|:-:|
@@ -74,7 +75,7 @@ Write actions are admin-only and validated in the backend; risky actions need tw
 
 - **Not tested on real hardware** (simulated TR-064 and browser test data only).
 - Guest Wi-Fi and frequency band are heuristics (with 3+ networks the last one counts as guest; band derived from channel; 6 GHz not distinguished).
-- No CPU/RAM load; CPU temperature only experimentally via an undocumented interface (off by default).
+- No CPU/RAM load; CPU temperature only experimentally via the box's undocumented web interface (off by default). The user needs web interface access; reasons are shown in the card under *Settings → Connection* (`cpu: web_login` = login rejected, `web_blocked` = login blocked, `web_unreachable` = web interface not reachable, `web_http`/`web_no_data` = unexpected reply).
 - **Backup is unverified:** whether the box delivers the backup via TR-064 depends on model, FRITZ!OS, user rights and possibly two-factor confirmation; it may end with an error message. The password is not stored – without it the file cannot be restored on the box. The file format is not validated. Restoring is deliberately done on the box only (*System → Backup*).
 - Fibre models have no DSL values (e.g. FRITZ!Box 5690 Pro).
 - English and Dutch are not reviewed by native speakers.
@@ -84,6 +85,7 @@ Write actions are admin-only and validated in the backend; risky actions need tw
 
 | Version | Changes |
 |---|---|
+| **0.0.3b1** | New logos. Optional settings in a collapsible section (options dialog and card). CPU temperature via the web interface (like FRITZ!Box Netzwerk). Wi-Fi more tolerant in HTTP mode, with fallback to the encrypted interface. |
 | **0.0.2b1** | Experimental: backup of box settings (service, card, event). DSL zeros on models without DSL shown as "–". Reason shown for an empty Wi-Fi list. |
 | **0.0.1b0** | First release (beta). |
 
@@ -93,12 +95,12 @@ Write actions are admin-only and validated in the backend; risky actions need tw
 
 | File | SHA256 |
 |---|---|
-| `custom_components/fritzbox_manager/manifest.json` | `918064437ac1fb636b047a4648260b195759b016aab65f9d941bb2bd89aba937` |
-| `custom_components/fritzbox_manager/strings.json` | `0d86ec24f652e4db9d9df83aa7006bd0af0b84d4ee667a6318aaabdb50021e4b` |
+| `custom_components/fritzbox_manager/manifest.json` | `2a69b0d226133d3065ffe64a5c6aa43a1c3b0bd0bb4f950859603be9d63fe9a7` |
+| `custom_components/fritzbox_manager/strings.json` | `cef404d0990ac21bba2f8d3282670023b71abaac4112b43274328f174b99ddea` |
 | `custom_components/fritzbox_manager/icons.json` | `b8b33129c6a6251f46d807f220e325b85d5923ec945e91a33b77a1f2f529ce0e` |
-| `custom_components/fritzbox_manager/translations/de.json` | `0d86ec24f652e4db9d9df83aa7006bd0af0b84d4ee667a6318aaabdb50021e4b` |
-| `custom_components/fritzbox_manager/translations/en.json` | `ceaf72b1ea6eb5f076248f7130846f53e3a74be7f75e48aeefdef061f13ede76` |
-| `custom_components/fritzbox_manager/translations/nl.json` | `4f449f35bcc4c4e822f2282b7316e200456a004af1cbe11025e09f1002c8f7ff` |
+| `custom_components/fritzbox_manager/translations/de.json` | `cef404d0990ac21bba2f8d3282670023b71abaac4112b43274328f174b99ddea` |
+| `custom_components/fritzbox_manager/translations/en.json` | `8e18df6cdf762fbb005e273e9a6db894624e6269b2b94443d29dbab73e699915` |
+| `custom_components/fritzbox_manager/translations/nl.json` | `7665e6a3f05d5fdf3a06ef452c557d49a6a23ce4a6494280b310574fbeb7d8f3` |
 | `hacs.json` | `360a813ce8c9ed6a42abd57d21c4b416646ffe3fe6777d8fd89145e9ef989a71` |
 
 ## License

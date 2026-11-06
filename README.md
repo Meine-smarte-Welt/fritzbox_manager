@@ -7,7 +7,7 @@
 
 📖 Blogbeitrag: [https://meinesmartewelt.de](https://meinesmartewelt.de)
 
-> **⚠️ Beta (Pre-release 0.0.2b1).** Diese Version ist **nicht an einer echten FRITZ!Box getestet**. Sie wurde gegen eine simulierte TR-064-Schnittstelle und mit Testdaten im Browser geprüft. Alles, was das Verhalten einer echten Box betrifft, ist **ungeprüft** (siehe „Bekannte Einschränkungen“).
+> **⚠️ Beta (Pre-release 0.0.3b1).** Diese Version ist **nicht an einer echten FRITZ!Box getestet**. Sie wurde gegen eine simulierte TR-064-Schnittstelle und mit Testdaten im Browser geprüft. Alles, was das Verhalten einer echten Box betrifft, ist **ungeprüft** (siehe „Bekannte Einschränkungen“).
 
 Home-Assistant-Integration mit Dashboard-Karte für die Systemdaten deiner FRITZ!Box – als Ersatz für die Karten rund um FRITZ!Box Tools. Die Karte zeigt Übersicht, Box, Internet und WLAN, öffnet deine Schwester-Integrationen **FRITZ!Box Anrufe**, **FRITZ!Box Netzwerk** und **FRITZ!Box Ereignisse** als Popup und hat einen Einstellungs-Tab mit Versionsanzeige.
 <p>
@@ -20,21 +20,22 @@ Home-Assistant-Integration mit Dashboard-Karte für die Systemdaten deiner FRITZ
 - **Internet:** Verbindungsstatus, Laufzeit, externe IPv4/IPv6, IPv6-Präfix, Leitungsraten, Datenmenge, letzter Fehler, DSL-Werte.
 - **WLAN:** alle Funknetze mit Kanal, Standard, Geräten; Popup mit Details; Netze ein-/ausschalten (nur Administratoren, Ausschalten mit Zwei-Klick-Bestätigung).
 - **Module:** Popups, die die Karten deiner Integrationen *FRITZ!Box Anrufe*, *Netzwerk* und *Ereignisse* einbetten. Entitäten werden automatisch erkannt; von Hand festlegbar.
-- **Einstellungen:** App-Version mit Update-Hinweis, Verbindung, Optionen (Intervall, Ereignisse, CPU-Temperatur), Wartung (Neu verbinden, Neustart – Zwei-Klick), Ereignisprotokoll.
+- **Einstellungen:** App-Version mit Update-Hinweis, Verbindung, Optionen (Intervall, Ereignisse; optionale Einstellungen wie die CPU-Temperatur in einem einklappbaren Unterabschnitt), Wartung (Neu verbinden, Neustart – Zwei-Klick), Ereignisprotokoll.
 - **Backup (experimentell, standardmäßig aus):** Sicherung der FRITZ!Box-Einstellungen anstoßen und im Home-Assistant-Konfigurationsordner speichern – siehe [EXPERIMENTELL.md](EXPERIMENTELL.md).
 - Entitäten: Sensoren, Binärsensoren, WLAN-Schalter, Schaltflächen (Neustart, Neu verbinden).
 - Sprachen: Deutsch, Englisch, Niederländisch.
 
-## Neu in 0.0.2b1
+## Neu in 0.0.3b1
 
-- **Experimentell: Backup.** Einstellungen → *Experimentell*: Die Karte stößt über TR-064 eine Sicherung der FRITZ!Box-Einstellungen an (mit selbst gewähltem Kennwort) und legt die Datei in `config/fritzbox_manager_backups/` ab. Nur für Administratoren, zwei Schalter (Hauptschalter *Experimentelle Funktionen* und *Backup*), beide standardmäßig aus; das Kennwort wird weder gespeichert noch protokolliert. **Nicht an einer echten Box geprüft.** Details und Testschritte: [EXPERIMENTELL.md](EXPERIMENTELL.md).
-- **Korrigiert: DSL-Werte „0“.** Liefert die Box keine DSL-Verbindung (z. B. Glasfaser-Modelle), zeigt die Karte „–“ mit Hinweis statt Nullwerten.
-- **Besser erkennbar: leere WLAN-Liste.** Kann die Box die WLAN-Netze nicht liefern, nennt die Karte den Grund (z. B. fehlende Benutzerrechte) statt nur „keine WLAN-Netze“. Die eigentliche Ursache beim gemeldeten Fall ist **nicht bestätigt**; bitte Rechte „FRITZ!Box Einstellungen“ des Benutzers prüfen.
-- Neu: Service `fritzbox_manager.create_backup`, Ereignis `fritzbox_manager_backup_created`, Optionen *Experimentelle Funktionen*, *Backup*, *Anzahl aufbewahrter Backups*.
+- **Neue Logos** (`brand/`): Symbol und Logo mit dem neuen Router-Symbol.
+- **Optionen gebündelt.** Im Optionen-Dialog stehen die optionalen Einstellungen (CPU-Temperatur, Experimentelle Funktionen, Backup, Anzahl Backups) jetzt in einem **einklappbaren Abschnitt** („Akkordeon“). In der Karte liegen sie als Unterabschnitt *Optionale Einstellungen* unter *Einstellungen → Optionen*. Die gespeicherten Optionen bleiben unverändert.
+- **Geändert: CPU-Temperatur** wird jetzt wie bei *FRITZ!Box Netzwerk* über die Weboberfläche der Box gelesen (Seite `ecoStat`), nicht mehr über TR-064. Die Sitzung wird wiederverwendet, damit die Box nicht bei jeder Abfrage eine Anmeldung meldet. Weiterhin experimentell und **in diesem Projekt an einer echten Box ungeprüft**; die Auswertung stammt aus der Netzwerk-Integration, bei der der Wert funktioniert.
+- **Geändert: WLAN im HTTP-Modus.** Die WLAN-Abfrage ist toleranter (nur die Netz-Grundangaben sind Pflicht, Zusatzangaben fehlen notfalls) und fällt bei verweigerter unverschlüsselter Abfrage einmal auf die verschlüsselte Schnittstelle (Port 49443) zurück; das gilt auch fürs Ein-/Ausschalten. **Ursache nicht bestätigt, Änderung ungeprüft an einer echten Box.** Hilft das nicht, nenne bitte den Grund, den die Karte unter *Einstellungen → Verbindung* zeigt.
+- Backup (experimentell) ist unverändert; siehe [EXPERIMENTELL.md](EXPERIMENTELL.md).
 
 ## Bilder
 
-Alle Bilder zeigen **Version 0.0.1b0 mit Testdaten** (keine echte FRITZ!Box); sie wurden für 0.0.2b1 noch nicht neu erstellt, der neue Bereich *Experimentell* ist darauf nicht zu sehen.
+Alle Bilder zeigen **Version 0.0.1b0 mit Testdaten** (keine echte FRITZ!Box); sie wurden für 0.0.3b1 noch nicht neu erstellt, der neue Bereich *Experimentell* ist darauf nicht zu sehen.
 
 | Übersicht | WLAN | WLAN-Popup |
 |:-:|:-:|:-:|
@@ -112,7 +113,7 @@ Die Version steht an drei Stellen: Karte → Zahnrad → *App-Version*, oben im 
 
 ## Einstellungen
 
-Abfrageintervall (10–600 s, Standard 30 s), Ereignisse senden, CPU-Temperatur (experimentell, aus), Experimentelle Funktionen (Hauptschalter, aus), Backup (experimentell, aus), Anzahl aufbewahrter Backups (1–50, Standard 10). Der Bereich *Experimentell* erscheint in der Karte nur mit `show_experimental: true`.
+Abfrageintervall (10–600 s, Standard 30 s) und Ereignisse senden. Alle weiteren Einstellungen stehen im Optionen-Dialog (*Konfigurieren*) in einem einklappbaren Abschnitt **Optionale Einstellungen**: CPU-Temperatur (experimentell, aus), Experimentelle Funktionen (Hauptschalter, aus), Backup (experimentell, aus), Anzahl aufbewahrter Backups (1–50, Standard 10). In der Karte stehen sie unter *Einstellungen → Optionen → Optionale Einstellungen*. Der Bereich *Experimentell* erscheint in der Karte nur mit `show_experimental: true`.
 
 ## Sicherheit
 
@@ -126,7 +127,7 @@ Abfrageintervall (10–600 s, Standard 30 s), Ereignisse senden, CPU-Temperatur 
 
 - **Nicht an echter Hardware getestet.** Getestet wurde gegen eine simulierte TR-064-Schnittstelle (Backend) und mit Testdaten im Browser (Karte). Dienste, Werte und Einheiten einer echten FRITZ!Box sind **ungeprüft**; je nach Modell/FRITZ!OS können Werte fehlen.
 - **Gast-WLAN und Frequenzband sind Heuristiken:** Nutzt die Box keine passenden Angaben, gilt bei mindestens drei Netzen das letzte als Gast-Netz, das Band wird aus dem Kanal abgeleitet (6 GHz wird nicht unterschieden).
-- **Keine CPU-/RAM-Auslastung.** Nur die CPU-Temperatur, experimentell, über eine nicht öffentlich dokumentierte Schnittstelle (standardmäßig aus).
+- **Keine CPU-/RAM-Auslastung.** Nur die CPU-Temperatur, experimentell, über die nicht öffentlich dokumentierte Weboberfläche der Box (standardmäßig aus). Der Benutzer braucht Zugriff auf die Weboberfläche; Fehlergründe stehen in der Karte unter *Einstellungen → Verbindung* (`cpu: web_login` = Anmeldung abgelehnt, `web_blocked` = Anmeldung gesperrt, `web_unreachable` = Weboberfläche nicht erreichbar, `web_http`/`web_no_data` = unerwartete Antwort).
 - **Nur teilweise übersetzt geprüft:** Englisch und Niederländisch sind nicht von Muttersprachlern geprüft.
 - Die Popups brauchen die jeweilige Schwester-Integration samt Karte; ohne sie zeigt die Karte eine Anleitung statt der Funktion.
 - **Backup ist ungeprüft:** Ob die Box die Sicherung über TR-064 ausliefert, hängt von Modell, FRITZ!OS, Benutzerrechten und ggf. Zwei-Faktor-Bestätigung ab; es kann mit einem Fehlertext enden. Das Kennwort wird nicht gespeichert – ohne es lässt sich die Datei nicht an der Box einspielen. Das Dateiformat wird nicht geprüft (nur Größe und Typ). Das Einspielen geschieht bewusst nur an der Box selbst (*System → Sicherung*).
@@ -145,6 +146,7 @@ Abfrageintervall (10–600 s, Standard 30 s), Ereignisse senden, CPU-Temperatur 
 
 | Version | Änderungen |
 |---|---|
+| **0.0.3b1** | Neue Logos. Optionale Einstellungen im Optionen-Dialog und in der Karte in einem einklappbaren Abschnitt. CPU-Temperatur über die Weboberfläche (wie FRITZ!Box Netzwerk). WLAN im HTTP-Modus toleranter, mit Rückfall auf die verschlüsselte Schnittstelle. |
 | **0.0.2b1** | Experimentell: Backup der Box-Einstellungen (Service, Karte, Ereignis). DSL-Nullwerte bei Modellen ohne DSL werden als „–“ angezeigt. Grund bei leerer WLAN-Liste wird angezeigt. |
 | **0.0.1b0** | Erste Veröffentlichung (Beta): Integration, Karte mit 6 Kategorien, Module-Popups, WLAN-Schalten, Versionsanzeige. |
 
@@ -154,12 +156,12 @@ Die `.py`-, `.js`- und `.yaml`-Dateien tragen den SHA256-Hash ab Zeile 2 in der 
 
 | Datei | SHA256 |
 |---|---|
-| `custom_components/fritzbox_manager/manifest.json` | `918064437ac1fb636b047a4648260b195759b016aab65f9d941bb2bd89aba937` |
-| `custom_components/fritzbox_manager/strings.json` | `0d86ec24f652e4db9d9df83aa7006bd0af0b84d4ee667a6318aaabdb50021e4b` |
+| `custom_components/fritzbox_manager/manifest.json` | `2a69b0d226133d3065ffe64a5c6aa43a1c3b0bd0bb4f950859603be9d63fe9a7` |
+| `custom_components/fritzbox_manager/strings.json` | `cef404d0990ac21bba2f8d3282670023b71abaac4112b43274328f174b99ddea` |
 | `custom_components/fritzbox_manager/icons.json` | `b8b33129c6a6251f46d807f220e325b85d5923ec945e91a33b77a1f2f529ce0e` |
-| `custom_components/fritzbox_manager/translations/de.json` | `0d86ec24f652e4db9d9df83aa7006bd0af0b84d4ee667a6318aaabdb50021e4b` |
-| `custom_components/fritzbox_manager/translations/en.json` | `ceaf72b1ea6eb5f076248f7130846f53e3a74be7f75e48aeefdef061f13ede76` |
-| `custom_components/fritzbox_manager/translations/nl.json` | `4f449f35bcc4c4e822f2282b7316e200456a004af1cbe11025e09f1002c8f7ff` |
+| `custom_components/fritzbox_manager/translations/de.json` | `cef404d0990ac21bba2f8d3282670023b71abaac4112b43274328f174b99ddea` |
+| `custom_components/fritzbox_manager/translations/en.json` | `8e18df6cdf762fbb005e273e9a6db894624e6269b2b94443d29dbab73e699915` |
+| `custom_components/fritzbox_manager/translations/nl.json` | `7665e6a3f05d5fdf3a06ef452c557d49a6a23ce4a6494280b310574fbeb7d8f3` |
 | `hacs.json` | `360a813ce8c9ed6a42abd57d21c4b416646ffe3fe6777d8fd89145e9ef989a71` |
 
 ## Lizenz
