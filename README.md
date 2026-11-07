@@ -7,7 +7,7 @@
 
 📖 Blogbeitrag: [https://meinesmartewelt.de](https://meinesmartewelt.de)
 
-> **⚠️ Beta (Pre-release 0.0.3b1).** Diese Version ist **nicht an einer echten FRITZ!Box getestet**. Sie wurde gegen eine simulierte TR-064-Schnittstelle und mit Testdaten im Browser geprüft. Alles, was das Verhalten einer echten Box betrifft, ist **ungeprüft** (siehe „Bekannte Einschränkungen“).
+> **Teststand:** Geprüft gegen eine simulierte TR-064-Schnittstelle und mit Testdaten im Browser. Werte, Einheiten und Dienste anderer FRITZ!Box-Modelle und FRITZ!OS-Versionen können abweichen (siehe „Bekannte Einschränkungen“).
 
 Home-Assistant-Integration mit Dashboard-Karte für die Systemdaten deiner FRITZ!Box – als Ersatz für die Karten rund um FRITZ!Box Tools. Die Karte zeigt Übersicht, Box, Internet und WLAN, öffnet deine Schwester-Integrationen **FRITZ!Box Anrufe**, **FRITZ!Box Netzwerk** und **FRITZ!Box Ereignisse** als Popup und hat einen Einstellungs-Tab mit Versionsanzeige.
 <p>
@@ -15,7 +15,7 @@ Home-Assistant-Integration mit Dashboard-Karte für die Systemdaten deiner FRITZ
 </p>
 ## Funktionsumfang
 
-- **Übersicht:** Internet-Status, Download/Upload, WLAN, Box, Datenmenge, DSL-Werte, Schnellzugriff auf die Module.
+- **Übersicht:** Karteikarten für Internet-Status, Download, Upload, WLAN, Box, Datenmenge, DSL-Werte und Schnellzugriff auf die Module – **jede Karteikarte lässt sich einzeln ein- und ausschalten** (z. B. DSL bei Glasfaser).
 - **Box:** Modell, Firmware (inkl. Hinweis auf verfügbares Update), Hardware, Laufzeit, bekannte Netzwerkgeräte, optional CPU-Temperatur (experimentell).
 - **Internet:** Verbindungsstatus, Laufzeit, externe IPv4/IPv6, IPv6-Präfix, Leitungsraten, Datenmenge, letzter Fehler, DSL-Werte.
 - **WLAN:** alle Funknetze mit Kanal, Standard, Geräten; Popup mit Details; Netze ein-/ausschalten (nur Administratoren, Ausschalten mit Zwei-Klick-Bestätigung).
@@ -25,17 +25,20 @@ Home-Assistant-Integration mit Dashboard-Karte für die Systemdaten deiner FRITZ
 - Entitäten: Sensoren, Binärsensoren, WLAN-Schalter, Schaltflächen (Neustart, Neu verbinden).
 - Sprachen: Deutsch, Englisch, Niederländisch.
 
-## Neu in 0.0.3b1
+## Neu in 0.5.0
 
-- **Neue Logos** (`brand/`): Symbol und Logo mit dem neuen Router-Symbol.
-- **Optionen gebündelt.** Im Optionen-Dialog stehen die optionalen Einstellungen (CPU-Temperatur, Experimentelle Funktionen, Backup, Anzahl Backups) jetzt in einem **einklappbaren Abschnitt** („Akkordeon“). In der Karte liegen sie als Unterabschnitt *Optionale Einstellungen* unter *Einstellungen → Optionen*. Die gespeicherten Optionen bleiben unverändert.
-- **Geändert: CPU-Temperatur** wird jetzt wie bei *FRITZ!Box Netzwerk* über die Weboberfläche der Box gelesen (Seite `ecoStat`), nicht mehr über TR-064. Die Sitzung wird wiederverwendet, damit die Box nicht bei jeder Abfrage eine Anmeldung meldet. Weiterhin experimentell und **in diesem Projekt an einer echten Box ungeprüft**; die Auswertung stammt aus der Netzwerk-Integration, bei der der Wert funktioniert.
-- **Geändert: WLAN im HTTP-Modus.** Die WLAN-Abfrage ist toleranter (nur die Netz-Grundangaben sind Pflicht, Zusatzangaben fehlen notfalls) und fällt bei verweigerter unverschlüsselter Abfrage einmal auf die verschlüsselte Schnittstelle (Port 49443) zurück; das gilt auch fürs Ein-/Ausschalten. **Ursache nicht bestätigt, Änderung ungeprüft an einer echten Box.** Hilft das nicht, nenne bitte den Grund, den die Karte unter *Einstellungen → Verbindung* zeigt.
-- Backup (experimentell) ist unverändert; siehe [EXPERIMENTELL.md](EXPERIMENTELL.md).
+Erste öffentliche Version.
+
+- **Karteikarten einzeln ein-/ausschaltbar.** Jede Karteikarte der Übersicht hat einen eigenen Schalter (`show_tile_*`). Wer kein DSL hat (z. B. Glasfaser), schaltet *DSL-Leitung* aus; die DSL-Werte verschwinden dann auch in der Kategorie *Internet*.
+- **Karten-Editor als Akkordeon.** Die Kategorien stehen als einklappbare Abschnitte im Editor; Karteikarten und Module liegen jeweils in ihrer Kategorie.
+- **Optionen gebündelt.** Optionale Einstellungen (CPU-Temperatur, Experimentelle Funktionen, Backup, Anzahl Backups) stehen im Optionen-Dialog und in der Karte (*Einstellungen → Optionen*) in einem einklappbaren Abschnitt.
+- **WLAN im HTTP-Modus** toleranter: nur die Netz-Grundangaben sind Pflicht, bei verweigerter unverschlüsselter Abfrage wird einmal die verschlüsselte Schnittstelle (Port 49443) genutzt; das gilt auch fürs Schalten. **Ungeprüft an einer echten Box**, Ursache nicht bestätigt. Hilft das nicht, nenne bitte den Grund, den die Karte unter *Einstellungen → Verbindung* zeigt.
+- **CPU-Temperatur** (experimentell, aus) wird wie bei *FRITZ!Box Netzwerk* über die Weboberfläche der Box gelesen. **Backup** der Box-Einstellungen (experimentell, aus): siehe [EXPERIMENTELL.md](EXPERIMENTELL.md).
+- Glasfaser-Modelle ohne DSL zeigen „–“ statt Nullwerten, und bei leerer WLAN-Liste nennt die Karte den Grund.
 
 ## Bilder
 
-Alle Bilder zeigen **Version 0.0.1b0 mit Testdaten** (keine echte FRITZ!Box); sie wurden für 0.0.3b1 noch nicht neu erstellt, der neue Bereich *Experimentell* ist darauf nicht zu sehen.
+Alle Bilder zeigen **Testdaten** (keine echte FRITZ!Box). Der Bereich *Experimentell* und der Karten-Editor sind darauf nicht zu sehen.
 
 | Übersicht | WLAN | WLAN-Popup |
 |:-:|:-:|:-:|
@@ -55,7 +58,7 @@ Im Modul-Popup siehst du hier eine Platzhalterkarte; im Betrieb erscheint dort d
 
 ## Installation
 
-**HACS:** Benutzerdefiniertes Repository `https://github.com/Meine-smarte-Welt/fritzbox_manager` (Kategorie *Integration*) hinzufügen. Da es sich um ein Pre-release handelt, muss in HACS bei diesem Repository **„Beta-Versionen anzeigen“** aktiviert sein. Herunterladen, Home Assistant neu starten.
+**HACS:** Benutzerdefiniertes Repository `https://github.com/Meine-smarte-Welt/fritzbox_manager` (Kategorie *Integration*) hinzufügen. Herunterladen, Home Assistant neu starten.
 
 **Manuell:** Ordner `custom_components/fritzbox_manager` nach `config/custom_components/` kopieren, neu starten.
 
@@ -71,7 +74,23 @@ Die Karte wird automatisch als Lovelace-Ressource (`/fritzbox_manager_files/frit
 type: custom:fritzbox-manager-card
 ```
 
-Wichtige Schlüssel: `title`, `show_title`, `show_overview|system|internet|wifi|modules|settings`, `show_experimental`, `default_tab`, `zoom`, `read_only`, `entry_id` (nur bei mehreren Boxen), `module_calls_config`, `module_network_config`, `module_events_config`, `color_*`. Alles ist auch im grafischen Editor einstellbar. Beispiele: [`examples/`](examples/).
+Wichtige Schlüssel: `title`, `show_title`, `show_overview|system|internet|wifi|modules|settings`, `show_tile_internet|download|upload|wifi|box|traffic|dsl|quick`, `show_experimental`, `default_tab`, `zoom`, `read_only`, `entry_id` (nur bei mehreren Boxen), `module_calls_config`, `module_network_config`, `module_events_config`, `color_*`. Alles ist auch im grafischen Editor einstellbar. Beispiele: [`examples/`](examples/).
+
+### Karteikarten ein- und ausschalten
+
+Die Übersicht besteht aus Karteikarten. Jede lässt sich einzeln ausschalten, im grafischen Editor unter **Übersicht** oder per YAML:
+
+```yaml
+type: custom:fritzbox-manager-card
+show_tile_dsl: false      # keine DSL-Werte (Übersicht und Kategorie „Internet“), z. B. bei Glasfaser
+show_tile_quick: false    # kein Schnellzugriff
+```
+
+Schlüssel: `show_tile_internet`, `show_tile_download`, `show_tile_upload`, `show_tile_wifi`, `show_tile_box`, `show_tile_traffic`, `show_tile_dsl`, `show_tile_quick` (Standard jeweils `true`). `show_tile_dsl` blendet die DSL-Werte auch in der Kategorie *Internet* aus. Sind alle Karteikarten aus, zeigt die Übersicht einen Hinweis.
+
+### Karten-Editor
+
+Im grafischen Editor sind die Kategorien als **einklappbare Abschnitte (Akkordeon)** zusammengefasst: *Übersicht* (mit den Karteikarten), *Box*, *Internet*, *WLAN*, *Module* (mit den Modulen) und *Einstellungen*, danach *Darstellung*, *Bearbeiten*, *Experimentell* und *Farben*.
 
 > Abweichung von den anderen Managern: Diese Karte hat keine Spaltenlisten und deshalb **keine** Suche, Filter, Sortierung oder Spaltenschalter.
 
@@ -109,7 +128,7 @@ Firmware, Laufzeit der Box und der Verbindung, externe IPv4/IPv6, IPv6-Präfix, 
 
 ## Versionsanzeige und Update-Hinweis
 
-Die Version steht an drei Stellen: Karte → Zahnrad → *App-Version*, oben im Karten-Editor und im Optionen-Dialog. Alle 12 Stunden wird GitHub nach einer neueren Version gefragt (auch Pre-releases, solange eine Beta läuft). Ist GitHub nicht erreichbar, läuft alles normal weiter.
+Die Version steht an drei Stellen: Karte → Zahnrad → *App-Version*, oben im Karten-Editor und im Optionen-Dialog. Alle 12 Stunden wird GitHub nach einer neueren Version gefragt. Ist GitHub nicht erreichbar, läuft alles normal weiter.
 
 ## Einstellungen
 
@@ -125,7 +144,7 @@ Abfrageintervall (10–600 s, Standard 30 s) und Ereignisse senden. Alle weitere
 
 ## Bekannte Einschränkungen
 
-- **Nicht an echter Hardware getestet.** Getestet wurde gegen eine simulierte TR-064-Schnittstelle (Backend) und mit Testdaten im Browser (Karte). Dienste, Werte und Einheiten einer echten FRITZ!Box sind **ungeprüft**; je nach Modell/FRITZ!OS können Werte fehlen.
+- **Begrenzter Praxistest.** Die automatischen Tests laufen gegen eine simulierte TR-064-Schnittstelle (Backend) und mit Testdaten im Browser (Karte). Dienste, Werte und Einheiten anderer FRITZ!Box-Modelle und FRITZ!OS-Versionen sind **ungeprüft**; je nach Modell können Werte fehlen. Abweichungen bitte als Issue melden.
 - **Gast-WLAN und Frequenzband sind Heuristiken:** Nutzt die Box keine passenden Angaben, gilt bei mindestens drei Netzen das letzte als Gast-Netz, das Band wird aus dem Kanal abgeleitet (6 GHz wird nicht unterschieden).
 - **Keine CPU-/RAM-Auslastung.** Nur die CPU-Temperatur, experimentell, über die nicht öffentlich dokumentierte Weboberfläche der Box (standardmäßig aus). Der Benutzer braucht Zugriff auf die Weboberfläche; Fehlergründe stehen in der Karte unter *Einstellungen → Verbindung* (`cpu: web_login` = Anmeldung abgelehnt, `web_blocked` = Anmeldung gesperrt, `web_unreachable` = Weboberfläche nicht erreichbar, `web_http`/`web_no_data` = unerwartete Antwort).
 - **Nur teilweise übersetzt geprüft:** Englisch und Niederländisch sind nicht von Muttersprachlern geprüft.
@@ -133,7 +152,6 @@ Abfrageintervall (10–600 s, Standard 30 s) und Ereignisse senden. Alle weitere
 - **Backup ist ungeprüft:** Ob die Box die Sicherung über TR-064 ausliefert, hängt von Modell, FRITZ!OS, Benutzerrechten und ggf. Zwei-Faktor-Bestätigung ab; es kann mit einem Fehlertext enden. Das Kennwort wird nicht gespeichert – ohne es lässt sich die Datei nicht an der Box einspielen. Das Dateiformat wird nicht geprüft (nur Größe und Typ). Das Einspielen geschieht bewusst nur an der Box selbst (*System → Sicherung*).
 - **Glasfaser-Modelle haben keine DSL-Werte** (z. B. FRITZ!Box 5690 Pro): Dort bleiben die DSL-Felder leer.
 - Notification Center (`#nc`) ist nicht angebunden.
-- Pre-release: HACS zeigt sie nur mit „Beta-Versionen anzeigen“.
 
 ## Fehlerbehebung
 
@@ -146,9 +164,7 @@ Abfrageintervall (10–600 s, Standard 30 s) und Ereignisse senden. Alle weitere
 
 | Version | Änderungen |
 |---|---|
-| **0.0.3b1** | Neue Logos. Optionale Einstellungen im Optionen-Dialog und in der Karte in einem einklappbaren Abschnitt. CPU-Temperatur über die Weboberfläche (wie FRITZ!Box Netzwerk). WLAN im HTTP-Modus toleranter, mit Rückfall auf die verschlüsselte Schnittstelle. |
-| **0.0.2b1** | Experimentell: Backup der Box-Einstellungen (Service, Karte, Ereignis). DSL-Nullwerte bei Modellen ohne DSL werden als „–“ angezeigt. Grund bei leerer WLAN-Liste wird angezeigt. |
-| **0.0.1b0** | Erste Veröffentlichung (Beta): Integration, Karte mit 6 Kategorien, Module-Popups, WLAN-Schalten, Versionsanzeige. |
+| **0.5.0** | Erste öffentliche Version: Integration, Karte mit 6 Kategorien, Karteikarten der Übersicht einzeln ein-/ausschaltbar, Karten-Editor mit Akkordeon, Module-Popups, WLAN-Schalten, Versionsanzeige, Optionen in einklappbarem Abschnitt. Experimentell (aus): Backup, CPU-Temperatur. |
 
 ## Datei-Integrität
 
@@ -156,7 +172,7 @@ Die `.py`-, `.js`- und `.yaml`-Dateien tragen den SHA256-Hash ab Zeile 2 in der 
 
 | Datei | SHA256 |
 |---|---|
-| `custom_components/fritzbox_manager/manifest.json` | `2a69b0d226133d3065ffe64a5c6aa43a1c3b0bd0bb4f950859603be9d63fe9a7` |
+| `custom_components/fritzbox_manager/manifest.json` | `5236c419705c4d9b77cb1eb2ab6a97d3c208398096ada0de58968dc3e0b97fa6` |
 | `custom_components/fritzbox_manager/strings.json` | `cef404d0990ac21bba2f8d3282670023b71abaac4112b43274328f174b99ddea` |
 | `custom_components/fritzbox_manager/icons.json` | `b8b33129c6a6251f46d807f220e325b85d5923ec945e91a33b77a1f2f529ce0e` |
 | `custom_components/fritzbox_manager/translations/de.json` | `cef404d0990ac21bba2f8d3282670023b71abaac4112b43274328f174b99ddea` |

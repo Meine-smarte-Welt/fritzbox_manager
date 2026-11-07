@@ -1,4 +1,4 @@
-# SHA256 (Inhalt ab Zeile 2, d.h. dieser Datei ohne diese erste Zeile): 769fb6923fc0de0c82ef0b32712c4f3c80f15886f1ec6ccb7d0e6ae924f3a41d
+# SHA256 (Inhalt ab Zeile 2, d.h. dieser Datei ohne diese erste Zeile): c23b3167b5edbcc78763ec8681ef5f18d8f7f7e8aca83d2bf22f624ecfda622c
 """Konstanten der Integration FRITZ!Box Manager."""
 
 from __future__ import annotations
@@ -11,7 +11,7 @@ DOMAIN: Final = "fritzbox_manager"
 
 # Version dieser Integration. MUSS mit manifest.json und CARD_VERSION in der
 # Karte (www/fritzbox-manager-card.js) identisch sein (Prüfung vor dem Release).
-VERSION: Final = "0.0.3b1"
+VERSION: Final = "0.5.0"
 GITHUB_REPO: Final = "Meine-smarte-Welt/fritzbox_manager"
 GITHUB_RELEASES_URL: Final = f"https://github.com/{GITHUB_REPO}/releases"
 MANUFACTURER: Final = "AVM"
@@ -53,7 +53,7 @@ DEFAULT_BACKUP_KEEP: Final = 10
 MIN_BACKUP_KEEP: Final = 1
 MAX_BACKUP_KEEP: Final = 50
 EXPERIMENTAL_FEATURES: Final = {
-    "backup": {"since": "0.0.2b1", "icon": "mdi:backup-restore", "option": CONF_BACKUP_ENABLED},
+    "backup": {"since": "0.5.0", "icon": "mdi:backup-restore", "option": CONF_BACKUP_ENABLED},
 }
 
 # --- Backup der FRITZ!Box-Einstellungen --------------------------------------------

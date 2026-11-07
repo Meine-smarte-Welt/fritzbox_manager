@@ -1,4 +1,4 @@
-// SHA256 (Inhalt ab Zeile 2, d.h. dieser Datei ohne diese erste Zeile): 918b770328ef9d29b72a692c9cedd24aae5c6b835d0e9e4a1127af85e474fb44
+// SHA256 (Inhalt ab Zeile 2, d.h. dieser Datei ohne diese erste Zeile): 91496a97999efaa1b3af3d74868a972c334e951f035ee6a9fd9fa2b4df4295a3
 /**
  * FRITZ!Box Manager Card
  *
@@ -10,7 +10,7 @@
  * Aufbau nach dem Design-Master von "Meine smarte Welt".
  */
 
-const CARD_VERSION = "0.0.3b1";
+const CARD_VERSION = "0.5.0";
 const DOMAIN = "fritzbox_manager";
 const WS_SUBSCRIBE = "fritzbox_manager/subscribe";
 const WS_ACTION = "fritzbox_manager/action";
@@ -29,12 +29,17 @@ const TAB_META = {
 };
 const CATEGORY_ICON_COLOR_KEYS = Object.fromEntries(TAB_ORDER.map((k) => [k, `color_icon_${k}`]));
 
+// --- Karteikarten (Kacheln der Übersicht) - einzeln ein-/ausschaltbar -------------
+// Je Karteikarte ein Schlüssel show_tile_<name> (Standard: an). "dsl" blendet die
+// DSL-Werte zusätzlich in der Kategorie "Internet" aus (z. B. bei Glasfaser).
+const TILE_ORDER = ["internet", "download", "upload", "wifi", "box", "traffic", "dsl", "quick"];
+
 // --- Experimentelle Funktionen (ungeprüft, standardmäßig ausgeblendet) -----------
 // Registry schlüsselgleich zu EXPERIMENTAL_FEATURES in const.py. Solange show_experimental
 // aus ist, erscheint von diesen Funktionen nichts in der Karte. "option" ist der eigene
 // Schalter (Standard aus) in den Optionen der Integration.
 const EXPERIMENTAL = {
-  backup: { since: "0.0.2b1", icon: "mdi:backup-restore", option: "backup_enabled", label: "x_backup" },
+  backup: { since: "0.5.0", icon: "mdi:backup-restore", option: "backup_enabled", label: "x_backup" },
 };
 
 // --- Module: die Schwester-Integrationen, die als Popup eingebunden werden -------
@@ -100,6 +105,14 @@ const CONFIG_DEFAULTS = {
   show_modules: true,
   show_settings: true,
   show_experimental: false,
+  show_tile_internet: true,
+  show_tile_download: true,
+  show_tile_upload: true,
+  show_tile_wifi: true,
+  show_tile_box: true,
+  show_tile_traffic: true,
+  show_tile_dsl: true,
+  show_tile_quick: true,
   default_tab: "overview",
   max_rows: 20,
   zoom: 1,
@@ -120,6 +133,7 @@ const I18N = {
     default_title: "FRITZ!Box Manager",
     tab_overview: "Übersicht", tab_system: "Box", tab_internet: "Internet", tab_wifi: "WLAN", tab_modules: "Module", tab_settings: "Einstellungen",
     loading: "Warte auf Daten der FRITZ!Box …",
+    tiles_none: "Alle Karteikarten der Übersicht sind ausgeschaltet. Du kannst sie im Karten-Editor unter „Übersicht“ wieder einschalten.",
     not_found: "Keine eingerichtete FRITZ!Box Manager-Integration gefunden. Prüfe unter Einstellungen > Geräte & Dienste.",
     conn_lost: "Keine Verbindung zur FRITZ!Box. Die letzten bekannten Werte werden angezeigt.",
     reboot_running: "Neustart läuft … die FRITZ!Box ist in wenigen Minuten wieder erreichbar.",
@@ -174,6 +188,7 @@ const I18N = {
     default_title: "FRITZ!Box Manager",
     tab_overview: "Overview", tab_system: "Box", tab_internet: "Internet", tab_wifi: "Wi-Fi", tab_modules: "Modules", tab_settings: "Settings",
     loading: "Waiting for data from the FRITZ!Box …",
+    tiles_none: "All overview cards are switched off. You can switch them on again in the card editor under \"Overview\".",
     not_found: "No configured FRITZ!Box Manager integration found. Check Settings > Devices & services.",
     conn_lost: "No connection to the FRITZ!Box. The last known values are shown.",
     reboot_running: "Restart in progress … the FRITZ!Box will be back in a few minutes.",
@@ -228,6 +243,7 @@ const I18N = {
     default_title: "FRITZ!Box Manager",
     tab_overview: "Overzicht", tab_system: "Box", tab_internet: "Internet", tab_wifi: "Wifi", tab_modules: "Modules", tab_settings: "Instellingen",
     loading: "Wachten op gegevens van de FRITZ!Box …",
+    tiles_none: "Alle kaartjes van het overzicht staan uit. Je kunt ze in de kaarteditor onder \"Overzicht\" weer aanzetten.",
     not_found: "Geen ingestelde FRITZ!Box Manager-integratie gevonden. Controleer Instellingen > Apparaten en diensten.",
     conn_lost: "Geen verbinding met de FRITZ!Box. De laatst bekende waarden worden getoond.",
     reboot_running: "Herstart bezig … de FRITZ!Box is over enkele minuten weer bereikbaar.",
@@ -1090,6 +1106,11 @@ class FritzboxManagerCard extends HTMLElement {
     return `<div class="tile ${extra}"><h3><ha-icon icon="${icon}"></ha-icon>${esc(this._t(titleKey))}</h3>${body}</div>`;
   }
 
+  /** Karteikarte der Übersicht eingeschaltet? (Standard: ja) */
+  _tileOn(name) {
+    return this._config[`show_tile_${name}`] !== false;
+  }
+
   _enabledModules() {
     return MODULE_ORDER.filter((name) => this._config[`show_module_${name}`] !== false);
   }
@@ -1109,7 +1130,7 @@ class FritzboxManagerCard extends HTMLElement {
     const online = wan.status ? !!wan.connected : null;
     const statusClass = online === null ? "warning" : online ? "success" : "error";
     const statusText = online === null ? t("chip_unknown") : t(online ? "chip_online" : "chip_offline");
-    tiles.push(
+    if (this._tileOn("internet")) tiles.push(
       this._tile(
         "t_internet",
         online === false ? "mdi:web-off" : "mdi:web",
@@ -1121,7 +1142,7 @@ class FritzboxManagerCard extends HTMLElement {
 
     const down = fmtRate(lang, wan.rate_down);
     const up = fmtRate(lang, wan.rate_up);
-    tiles.push(
+    if (this._tileOn("download")) tiles.push(
       this._tile(
         "t_download",
         "mdi:download-network",
@@ -1130,7 +1151,7 @@ class FritzboxManagerCard extends HTMLElement {
           `<div class="sub">${esc(t("l_max"))}: ${esc(rateText(lang, wan.max_down, na))}</div>`
       )
     );
-    tiles.push(
+    if (this._tileOn("upload")) tiles.push(
       this._tile(
         "t_upload",
         "mdi:upload-network",
@@ -1146,7 +1167,7 @@ class FritzboxManagerCard extends HTMLElement {
       .slice(0, 4)
       .map((n) => `<span><span class="dot ${n.enabled ? "success" : ""}"></span>${esc(n.ssid || n.key)}${n.guest ? ` · ${esc(t("w_guest"))}` : ""}</span>`)
       .join("");
-    tiles.push(
+    if (this._tileOn("wifi")) tiles.push(
       this._tile(
         "t_wifi",
         "mdi:wifi",
@@ -1156,7 +1177,7 @@ class FritzboxManagerCard extends HTMLElement {
       )
     );
 
-    tiles.push(
+    if (this._tileOn("box")) tiles.push(
       this._tile(
         "t_box",
         "mdi:router-network",
@@ -1167,7 +1188,7 @@ class FritzboxManagerCard extends HTMLElement {
       )
     );
 
-    tiles.push(
+    if (this._tileOn("traffic")) tiles.push(
       this._tile(
         "t_traffic",
         "mdi:swap-vertical",
@@ -1176,7 +1197,7 @@ class FritzboxManagerCard extends HTMLElement {
       )
     );
 
-    if (dsl) {
+    if (dsl && this._tileOn("dsl")) {
       const dB = (v) => (v === null || v === undefined ? na : `${numFmt(lang, v, 1)} dB`);
       tiles.push(
         this._tile(
@@ -1192,12 +1213,13 @@ class FritzboxManagerCard extends HTMLElement {
     }
 
     const mods = this._enabledModules();
-    if (mods.length) {
+    if (mods.length && this._tileOn("quick")) {
       const buttons = mods
         .map((name) => `<button class="btn" data-act="module" data-v="${name}"><ha-icon icon="${MODULES[name].icon}"></ha-icon>${esc(t(MODULES[name].label))}</button>`)
         .join("");
       tiles.push(this._tile("t_quick", "mdi:puzzle", `<div class="actions" style="margin-top:0">${buttons}</div>`, "wide"));
     }
+    if (!tiles.length) return `<div class="empty">${esc(t("tiles_none"))}</div>`;
     return `<div class="tiles">${tiles.join("")}</div>`;
   }
 
@@ -1258,7 +1280,7 @@ class FritzboxManagerCard extends HTMLElement {
     const traffic = this._line(t("l_received"), esc(fmtBytes(lang, wan.bytes_received, na))) + this._line(t("l_sent"), esc(fmtBytes(lang, wan.bytes_sent, na)));
     h += this._acc("traffic", "mdi:swap-vertical", t("a_traffic"), traffic);
 
-    if (dsl) {
+    if (dsl && this._tileOn("dsl")) {
       const dB = (v) => (v === null || v === undefined ? na : `${numFmt(lang, v, 1)} dB`);
       const body =
         (this._dslInactive(dsl) ? `<p class="hint">${esc(t("dsl_inactive", { status: dsl.status || na }))}</p>` : "") +
@@ -1634,6 +1656,14 @@ const EDITOR_LABELS = {
   title: "Titel (leer = keine Überschrift)",
   show_title: "Titel anzeigen",
   entry_id: "Eintrags-ID (nur bei mehreren FRITZ!Boxen)",
+  show_tile_internet: "Karteikarte „Internet“ anzeigen",
+  show_tile_download: "Karteikarte „Download“ anzeigen",
+  show_tile_upload: "Karteikarte „Upload“ anzeigen",
+  show_tile_wifi: "Karteikarte „WLAN“ anzeigen",
+  show_tile_box: "Karteikarte „FRITZ!Box“ anzeigen",
+  show_tile_traffic: "Karteikarte „Datenmenge“ anzeigen",
+  show_tile_dsl: "Karteikarte „DSL-Leitung“ anzeigen",
+  show_tile_quick: "Karteikarte „Schnellzugriff“ anzeigen",
   show_overview: "Kategorie „Übersicht“ anzeigen",
   show_system: "Kategorie „Box“ anzeigen",
   show_internet: "Kategorie „Internet“ anzeigen",
@@ -1653,6 +1683,8 @@ const EDITOR_LABELS = {
   module_events_config: "Ereignisse: Karten-Konfiguration überschreiben (optional)",
 };
 const EDITOR_HELPERS = {
+  show_tile_dsl: "Blendet die DSL-Werte auch in der Kategorie „Internet“ aus. Sinnvoll bei Glasfaser oder Kabel, wo es keine DSL-Werte gibt.",
+  show_tile_quick: "Die Schaltflächen für die Module (Anrufe, Netzwerk, Ereignisse). Welche Module es gibt, stellst du unter „Module“ ein.",
   show_experimental: "Blendet ungeprüfte Funktionen in den Einstellungen ein (aktuell: Backup der Einstellungen). Zusätzlich muss in den Optionen der Integration der Hauptschalter eingeschaltet werden.",
 };
 const EDITOR_COLOR_LABELS = {
@@ -1735,26 +1767,30 @@ class FritzboxManagerCardEditor extends HTMLElement {
 
   _schema() {
     const tabOptions = TAB_ORDER.map((k) => ({ value: k, label: I18N.de[TAB_META[k].label] }));
+    const bool = (name) => ({ name, selector: { boolean: {} } });
+    // Je Kategorie ein einklappbarer Abschnitt (Akkordeon) mit ihrem Schalter und,
+    // wo es sie gibt, den Schaltern ihrer Karteikarten bzw. Module. So bleibt der
+    // Editor übersichtlich, auch wenn viele Schalter dazukommen.
+    const category = (key, extra) => ({
+      type: "expandable", name: "", title: I18N.de[TAB_META[key].label], icon: TAB_META[key].icon, flatten: true,
+      schema: [bool(`show_${key}`), ...extra],
+    });
     return [
-      {
-        type: "expandable", name: "", title: "Kategorien", icon: "mdi:tab", expanded: true, flatten: true,
-        schema: [
-          ...TAB_ORDER.map((k) => ({ name: `show_${k}`, selector: { boolean: {} } })),
-          { name: "default_tab", selector: { select: { mode: "dropdown", options: tabOptions } } },
-        ],
-      },
-      {
-        type: "expandable", name: "", title: "Module (Popups)", icon: "mdi:puzzle", flatten: true,
-        schema: [
-          ...MODULE_ORDER.map((k) => ({ name: `show_module_${k}`, selector: { boolean: {} } })),
-          ...MODULE_ORDER.map((k) => ({ name: `module_${k}_config`, selector: { object: {} } })),
-        ],
-      },
+      category("overview", TILE_ORDER.map((k) => bool(`show_tile_${k}`))),
+      category("system", []),
+      category("internet", []),
+      category("wifi", []),
+      category("modules", [
+        ...MODULE_ORDER.map((k) => bool(`show_module_${k}`)),
+        ...MODULE_ORDER.map((k) => ({ name: `module_${k}_config`, selector: { object: {} } })),
+      ]),
+      category("settings", []),
       {
         type: "expandable", name: "", title: "Darstellung", icon: "mdi:palette-swatch", flatten: true,
         schema: [
           { name: "title", selector: { text: {} } },
           { name: "show_title", selector: { boolean: {} } },
+          { name: "default_tab", selector: { select: { mode: "dropdown", options: tabOptions } } },
           { name: "show_stats", selector: { boolean: {} } },
           { name: "max_rows", selector: { number: { min: 1, max: 100, mode: "box" } } },
           { name: "zoom", selector: { number: { min: 0.5, max: 2, step: 0.05, mode: "slider" } } },

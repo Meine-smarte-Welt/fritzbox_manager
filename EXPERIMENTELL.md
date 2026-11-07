@@ -1,6 +1,6 @@
 # Experimentelle Funktionen – FRITZ!Box Manager
 
-Stand: Version 0.0.3b1. Experimentelle Funktionen sind **standardmäßig aus**, ändern bei ausgeschaltetem Zustand nichts am Verhalten und sind **nicht an einer echten FRITZ!Box geprüft**.
+Stand: Version 0.5.0 (erste öffentliche Version). Experimentelle Funktionen sind **standardmäßig aus**, ändern bei ausgeschaltetem Zustand nichts am Verhalten und sind **nicht an einer echten FRITZ!Box geprüft**.
 
 ## So schaltest du sie ein
 
@@ -13,9 +13,9 @@ Das Backend arbeitet nur, wenn Hauptschalter **und** Einzelschalter an sind; son
 
 | Funktion | Seit | Schalter | Status |
 |---|---|---|---|
-| Backup der Box-Einstellungen | 0.0.2b1 | `backup_enabled` | experimentell, ungeprüft an echter Box |
-| CPU-Temperatur | 0.0.1b0 | Option „CPU-Temperatur“ (Abschnitt *Optionale Einstellungen*) | experimentell, in 0.0.3b1 umgebaut (Weboberfläche statt TR-064), ungeprüft in diesem Projekt; hängt nicht am Hauptschalter |
-| WLAN im HTTP-Modus (Änderung, kein Schalter) | 0.0.3b1 | – | ungeprüft: tolerantere Abfrage und Rückfall auf die verschlüsselte TR-064-Schnittstelle |
+| Backup der Box-Einstellungen | 0.5.0 | `backup_enabled` | experimentell, ungeprüft an echter Box |
+| CPU-Temperatur | 0.5.0 | Option „CPU-Temperatur“ (Abschnitt *Optionale Einstellungen*) | experimentell, liest über die Weboberfläche statt TR-064, ungeprüft in diesem Projekt; hängt nicht am Hauptschalter |
+| WLAN im HTTP-Modus (Änderung, kein Schalter) | 0.5.0 | – | ungeprüft: tolerantere Abfrage und Rückfall auf die verschlüsselte TR-064-Schnittstelle |
 
 ## Backup
 
@@ -38,9 +38,9 @@ Das Backend arbeitet nur, wenn Hauptschalter **und** Einzelschalter an sind; son
 
 Kennwort zu kurz/lang/ungültige Zeichen, fehlende Rechte, Dienst nicht unterstützt, Box lehnt ab („Internal Server Error“, z. B. wegen Zwei-Faktor oder Rechten), HTTP-Fehler, unerwarteter Inhalt, Datei zu groß oder leer.
 
-## CPU-Temperatur (umgebaut in 0.0.3b1)
+## CPU-Temperatur
 
-**Was sich geändert hat:** Der Wert kommt nicht mehr aus TR-064 (`get_cpu_temperatures`), sondern wie bei *FRITZ!Box Netzwerk* aus der Weboberfläche der Box (`login_sid.lua`, `data.lua`, Seite `ecoStat`, Reihe `cputemp`). Die Sitzungs-ID wird bis zu 15 Minuten wiederverwendet, damit die Box nicht bei jeder Abfrage eine Anmeldung meldet. Es wird zuerst `http://<Adresse>` genutzt, bei eingeschalteter verschlüsselter Verbindung zuerst `https://<Adresse>`.
+**Wie es funktioniert:** Der Wert kommt nicht aus TR-064 (`get_cpu_temperatures`), sondern wie bei *FRITZ!Box Netzwerk* aus der Weboberfläche der Box (`login_sid.lua`, `data.lua`, Seite `ecoStat`, Reihe `cputemp`). Die Sitzungs-ID wird bis zu 15 Minuten wiederverwendet, damit die Box nicht bei jeder Abfrage eine Anmeldung meldet. Es wird zuerst `http://<Adresse>` genutzt, bei eingeschalteter verschlüsselter Verbindung zuerst `https://<Adresse>`.
 
 **Warum ungeprüft:** Anmeldung und Auswertung sind aus der Netzwerk-Integration übernommen, bei der der Wert an einer echten Box funktioniert. In diesem Projekt wurde er nur gegen eine simulierte Weboberfläche geprüft.
 
@@ -51,7 +51,7 @@ Kennwort zu kurz/lang/ungültige Zeichen, fehlende Rechte, Dienst nicht unterst�
 3. Zeigt die Karte unter *Einstellungen → Verbindung* einen Eintrag `cpu: …`: `web_login` = Anmeldung abgelehnt (Benutzer braucht Zugriff auf die Weboberfläche), `web_blocked` = Anmeldung vorübergehend gesperrt, `web_unreachable` = Weboberfläche nicht erreichbar, `web_http` / `web_no_data` = unerwartete Antwort.
 4. Bitte melden: Modell, FRITZ!OS, ob der Wert stimmt (Vergleich mit *FRITZ!Box Netzwerk*).
 
-## WLAN im HTTP-Modus (Änderung in 0.0.3b1)
+## WLAN im HTTP-Modus (Änderung)
 
 **Beobachtung:** Mit „Verschlüsselte Verbindung (HTTPS)“ lädt die WLAN-Liste, ohne nicht. Die genaue Ursache ist **nicht bestätigt**.
 
@@ -69,4 +69,4 @@ Die Backup-Funktion ist unverändert. Verlangt die Box für die Sicherung eine z
 
 ## Offene Frage
 
-Die CPU-Temperatur ist seit 0.0.1b0 experimentell, hängt aber an einer eigenen Option und nicht am Hauptschalter. Soll sie in die Experimentell-Registry wechseln? Außerdem: Du hast geschrieben, dass das WLAN im HTTPS-Modus funktioniert und die CPU-Temperatur in *FRITZ!Box Netzwerk*. Soll die WLAN-Anzeige im HTTPS-Modus als „geprüft“ geführt werden?
+Die CPU-Temperatur ist experimentell, hängt aber an einer eigenen Option und nicht am Hauptschalter. Soll sie in die Experimentell-Registry wechseln? Außerdem: Du hast geschrieben, dass das WLAN im HTTPS-Modus funktioniert und die CPU-Temperatur in *FRITZ!Box Netzwerk*. Soll die WLAN-Anzeige im HTTPS-Modus als „geprüft“ geführt werden?

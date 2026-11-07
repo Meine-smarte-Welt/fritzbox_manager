@@ -1,4 +1,4 @@
-# SHA256 (Inhalt ab Zeile 2, d.h. dieser Datei ohne diese erste Zeile): 19068f8644630da24e76292e4c006a9c6f182fc667456c597982cb42c86c47e0
+# SHA256 (Inhalt ab Zeile 2, d.h. dieser Datei ohne diese erste Zeile): a4f2d19a8846ba261a5a8bf557bea7a0a64fa7c810790192193a3c9927fd8d9e
 type: custom:fritzbox-manager-card
 title: Meine FRITZ!Box
 show_title: true
@@ -10,6 +10,15 @@ show_wifi: true
 show_modules: true
 show_settings: true
 default_tab: overview
+# Karteikarten der Übersicht einzeln ein-/ausschalten (Standard: alle an)
+show_tile_internet: true
+show_tile_download: true
+show_tile_upload: true
+show_tile_wifi: true
+show_tile_box: true
+show_tile_traffic: true
+show_tile_dsl: false      # z. B. bei Glasfaser: keine DSL-Werte (auch nicht in "Internet")
+show_tile_quick: true
 zoom: 1
 read_only: false
 # Optional: Entitäten der Schwester-Integrationen von Hand festlegen,
